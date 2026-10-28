@@ -19,8 +19,6 @@ jobs:
     timeout-minutes: 15
     permissions:
       contents: write
-    env:
-      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/elan-browsers
     steps:
       - name: Lire les outils et les empreintes du site publié
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 épinglée
