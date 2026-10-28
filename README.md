@@ -2,8 +2,8 @@
 
 Cette branche isolée contient uniquement les 28 fichiers de l’application dans site/, un manifeste SHA256 et le workflow natif de publication. Aucune donnée de profil, sauvegarde, documentation source ou ressource personnelle n’est incluse dans site/. Aucun package npm ni installation n’est nécessaire en CI.
 
-Build SHA256 : 9041c98afe9294314f6e09734e56b632e05f31d64c5233b1b838cccc88f8765c
-Sources locales SHA256 : 22b4d9432c70d4f2049774a88736687f4eec237086460b56db9f7af94d48fd13
+Build SHA256 : c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d
+Sources locales SHA256 : a3a8cbea2b25926cccdf576bb710b7b6daa0cca9603a230d7fe20545dfc23605
 Commit de départ du dépôt source privé Elan (absent de l’historique de la cible publique ; pas le commit des sources locales) : 8d38021c22bebf3d4836e04389e22ce102c949d1
 Sous-chemin obligatoire : /elan-app/
 
