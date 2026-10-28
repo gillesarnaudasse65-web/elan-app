@@ -1,0 +1,68 @@
+name: Vérifier le parcours public Élan
+
+on:
+  push:
+    branches: [elan-browser-check]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: elan-public-browser-recipe
+  cancel-in-progress: false
+
+jobs:
+  browser:
+    if: github.ref == 'refs/heads/elan-browser-check'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: write
+    env:
+      PLAYWRIGHT_BROWSERS_PATH: ${{ runner.temp }}/elan-browsers
+    steps:
+      - name: Lire les outils et les empreintes du site publié
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4 épinglée
+      - name: Installer le navigateur et la version exacte de Playwright
+        id: tools
+        run: |
+          npm install --prefix "$RUNNER_TEMP/elan-browser-deps" --no-save --no-package-lock --ignore-scripts --no-audit --no-fund @playwright/test@1.64.1
+          node "$RUNNER_TEMP/elan-browser-deps/node_modules/playwright/cli.js" install --with-deps chromium
+          cp scripts/publication/public-browser-smoke.mjs "$RUNNER_TEMP/elan-browser-deps/public-browser-smoke.mjs"
+      - name: Jouer sur l’adresse publique et vérifier la sauvegarde hors ligne
+        id: recipe
+        continue-on-error: true
+        env:
+          ELAN_SMOKE_OUTPUT_DIR: ${{ github.workspace }}
+          ELAN_SMOKE_PACKAGE_ROOT: ${{ github.workspace }}
+        run: node "$RUNNER_TEMP/elan-browser-deps/public-browser-smoke.mjs"
+      - name: Conserver aussi un échec d’installation ou d’exécution
+        if: always()
+        env:
+          RECIPE_OUTCOME: ${{ steps.recipe.outcome }}
+          TOOLS_OUTCOME: ${{ steps.tools.outcome }}
+        run: |
+          node --input-type=module <<'NODE'
+          import { access, writeFile } from 'node:fs/promises';
+          try { await access('browser-status.json'); }
+          catch {
+            await writeFile('browser-status.json', JSON.stringify({
+              format: 'elan-public-browser-recipe', version: 1,
+              createdAt: new Date().toISOString(), passed: false,
+              repository: process.env.GITHUB_REPOSITORY,
+              sourceCommit: process.env.GITHUB_SHA,
+              workflowRunId: process.env.GITHUB_RUN_ID,
+              buildSha256: '9041c98afe9294314f6e09734e56b632e05f31d64c5233b1b838cccc88f8765c',
+              url: 'https://gillesarnaudasse65-web.github.io/elan-app/',
+              deployedToPublicURL: false, physicalDeviceTested: false,
+              error: 'Aucun rapport navigateur produit ; installation=' + process.env.TOOLS_OUTCOME + ', recette=' + process.env.RECIPE_OUTCOME
+            }, null, 2) + '\n');
+          }
+          NODE
+      - name: Persister la preuve sur une branche séparée sans force
+        if: always()
+        run: node scripts/publication/persist-browser-status.mjs
+      - name: Exiger la réussite de la vraie recette publique
+        if: always()
+        run: node --input-type=module -e "import {readFile} from 'node:fs/promises'; const report=JSON.parse(await readFile('browser-status.json','utf8')); if(report.passed!==true || report.deployedToPublicURL!==true) process.exit(1);"
