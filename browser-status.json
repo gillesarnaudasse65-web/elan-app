@@ -1,7 +1,8 @@
 {
   "format": "elan-public-browser-recipe",
   "version": 1,
-  "createdAt": "2026-10-28T12:08:11.333Z",
+  "scenario": "difficulty-levels-1-to-3",
+  "createdAt": "2026-10-28T13:32:27.306Z",
   "passed": true,
   "repository": "gillesarnaudasse65-web/elan-app",
   "url": "https://gillesarnaudasse65-web.github.io/elan-app/",
@@ -9,15 +10,39 @@
   "deployedToPublicURL": true,
   "physicalDeviceTested": false,
   "execution": "automated-isolated-browser",
-  "sourceCommit": "5f8f577f31ad62612b4ca709e9a8bfbc1487d387",
-  "workflowRunId": "40685306904",
-  "buildSha256": "9041c98afe9294314f6e09734e56b632e05f31d64c5233b1b838cccc88f8765c",
+  "sourceCommit": "d80692e8e7c9ebefff1e70a5d4cc4d2bbeb3e0b0",
+  "workflowRunId": "40697262820",
+  "expectedBuildSha256": "c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d",
+  "buildSha256": "c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d",
   "browserVersion": "156.0.8078.4",
   "manifest": {
     "start_url": "/elan-app/",
     "scope": "/elan-app/"
   },
-  "resourceManifest": "pwa-resources-mvs0orvc.json",
+  "resourceManifest": "pwa-resources-mvs5elss.json",
+  "playedActivities": [
+    {
+      "gameId": "01",
+      "runLevel": 1,
+      "attemptLevel": 1,
+      "cardCount": 6,
+      "pairs": 3,
+      "correct": 3
+    },
+    {
+      "gameId": "01",
+      "runLevel": 3,
+      "attemptLevel": 3,
+      "cardCount": 10,
+      "pairs": 5,
+      "correct": 5
+    }
+  ],
+  "difficultyChangeVerified": true,
+  "supportedLevelFilterIndependent": true,
+  "profileDifficultyAfterReload": 3,
+  "previousAttemptUnchanged": true,
+  "cardCountIncreased": true,
   "exportVerified": true,
   "registrations": [
     {
@@ -26,11 +51,19 @@
     }
   ],
   "persistedProfiles": 1,
-  "persistedAttempts": 1,
+  "persistedAttempts": 2,
   "activity": "01",
+  "gameIds": [
+    "01"
+  ],
+  "levels": [
+    1,
+    3
+  ],
+  "finalProfileDifficulty": 3,
   "correctionVerified": true,
   "resultVerified": true,
   "offlineReloadVerified": true,
   "pageErrors": [],
-  "completedAt": "2026-10-28T12:08:13.973Z"
+  "completedAt": "2026-10-28T13:32:32.560Z"
 }
