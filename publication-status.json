@@ -1,16 +1,16 @@
 {
   "format": "elan-publication-attestation",
   "version": 1,
-  "createdAt": "2026-10-28T11:54:57.609Z",
-  "sourceCommit": "d0a8f1f929fcc18baba7d60fc02b1c5cb0cc0684",
+  "createdAt": "2026-10-28T13:30:49.838Z",
+  "sourceCommit": "c51d87399fbcc6daf4d6c279510b93eddec41017",
   "sourceCommitMeaning": "Commit exact de la branche de publication exécuté par GitHub Actions ; les sources applicatives locales sont identifiées séparément par sourceTreeSha256.",
   "repository": "gillesarnaudasse65-web/elan-app",
   "sourceRepository": "gillesarnaudasse65-web/Elan",
   "repositoryBaseCommit": "8d38021c22bebf3d4836e04389e22ce102c949d1",
   "repositoryBaseCommitMeaning": "Commit de départ du dépôt source privé gillesarnaudasse65-web/Elan ; il ne représente pas un commit de la cible publique gillesarnaudasse65-web/elan-app.",
   "sourceWorkingTreeUncommitted": true,
-  "sourceTreeSha256": "22b4d9432c70d4f2049774a88736687f4eec237086460b56db9f7af94d48fd13",
-  "buildSha256": "9041c98afe9294314f6e09734e56b632e05f31d64c5233b1b838cccc88f8765c",
+  "sourceTreeSha256": "a3a8cbea2b25926cccdf576bb710b7b6daa0cca9603a230d7fe20545dfc23605",
+  "buildSha256": "c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d",
   "fileCount": 28,
   "basePath": "/elan-app/",
   "configOutcome": "success",
@@ -26,7 +26,7 @@
       "attempts": 1,
       "status": 200,
       "bytes": 1137,
-      "sha256": "5f1dc822d4a5980479e14bd7308db855a6cbd2a9f6ea9b674e722884840da75a"
+      "sha256": "de416315c58229f828f97deb3e8fa1636a8250ae6f3f493bc544c98bd636f75b"
     },
     {
       "path": "assets/MediaPacks-BryYYYOo.js",
@@ -37,12 +37,12 @@
       "sha256": "ce3023686d958f0424ccc0b1de4dc6d2a5d0a7b60a95f6d8c3783444029033ef"
     },
     {
-      "path": "assets/RecordingLibrary-ZsqgQXJM.js",
+      "path": "assets/RecordingLibrary-B9F5Ihly.js",
       "passed": true,
       "attempts": 1,
       "status": 200,
       "bytes": 188,
-      "sha256": "7484902877e2da22844aa94895530679ede7e10c848c8eeebc678f81ae743e88"
+      "sha256": "73d56713e4d97e00c41a3b953c9a7259208dfa13704b95b6ba2e8eac3c444dc8"
     },
     {
       "path": "assets/delayed-memory-D6po8vbo.js",
@@ -109,12 +109,12 @@
       "sha256": "aff879f9a5381b37d9ee3ddd2497695e04915350e5bccc133d749c210082aefa"
     },
     {
-      "path": "assets/index-CkapsXJF.js",
+      "path": "assets/index-CrBWu_Lv.js",
       "passed": true,
       "attempts": 1,
       "status": 200,
-      "bytes": 394524,
-      "sha256": "38282bd196d9d09e52e3fc9d74299718ef13c945caf0d5d1ce83e7cecdff0c1b"
+      "bytes": 397887,
+      "sha256": "27732009ac0bf2cfa2d02ecf011f629180c3cf9a18961deab48616a2d7893033"
     },
     {
       "path": "assets/index-D-oVRO-E.css",
@@ -218,7 +218,7 @@
       "attempts": 1,
       "status": 200,
       "bytes": 1137,
-      "sha256": "5f1dc822d4a5980479e14bd7308db855a6cbd2a9f6ea9b674e722884840da75a"
+      "sha256": "de416315c58229f828f97deb3e8fa1636a8250ae6f3f493bc544c98bd636f75b"
     },
     {
       "path": "manifest.webmanifest",
@@ -229,12 +229,12 @@
       "sha256": "88c7ac289a0de3df447b694bd66cea1457efa1c335b7ac0df779964062ccf999"
     },
     {
-      "path": "pwa-resources-mvs0orvc.json",
+      "path": "pwa-resources-mvs5elss.json",
       "passed": true,
       "attempts": 1,
       "status": 200,
       "bytes": 3899,
-      "sha256": "f07a7675ce6a12ce5e01c7c69f0a2f55fa0c5fe01a8eac4148afed0202a0ff55"
+      "sha256": "1cbef65e8619c8eaed562cda1a9e0ae62edae33760c167e85c76eafe26342ea8"
     },
     {
       "path": "sw.js",
@@ -242,7 +242,7 @@
       "attempts": 1,
       "status": 200,
       "bytes": 2413,
-      "sha256": "621a0d636e24c8ae6b3cb1fb13770b7df88386f37c66537cd83924791e01acbf"
+      "sha256": "6ba4d0d3b8d4e9e450cd45a285a9b687257ddc883943aa2f9fcbdcdb9047996e"
     },
     {
       "path": "workbox-5f44db27.js",
@@ -254,5 +254,5 @@
     }
   ],
   "errors": [],
-  "workflowRunId": "40683573159"
+  "workflowRunId": "40697040953"
 }
