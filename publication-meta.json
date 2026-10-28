@@ -1,0 +1,157 @@
+{
+  "format": "elan-publication",
+  "version": 1,
+  "repository": "gillesarnaudasse65-web/elan-app",
+  "basePath": "/elan-app/",
+  "sourceRepository": "gillesarnaudasse65-web/Elan",
+  "repositoryBaseCommit": "8d38021c22bebf3d4836e04389e22ce102c949d1",
+  "sourceWorkingTreeUncommitted": true,
+  "sourceTreeSha256": "22b4d9432c70d4f2049774a88736687f4eec237086460b56db9f7af94d48fd13",
+  "sourceTreeFiles": 188,
+  "sourceCommitMeaning": "repositoryBaseCommit est uniquement le commit de départ du dépôt source privé gillesarnaudasse65-web/Elan ; il ne représente pas un commit du nouveau dépôt public gillesarnaudasse65-web/elan-app. Les sources locales non commitées sont identifiées par sourceTreeSha256. Le commit exact de publication est ajouté par le workflow dans son attestation.",
+  "fileCount": 28,
+  "buildSha256": "9041c98afe9294314f6e09734e56b632e05f31d64c5233b1b838cccc88f8765c",
+  "resourceManifest": "pwa-resources-mvs0orvc.json",
+  "files": [
+    {
+      "path": "assets/MediaPacks-BryYYYOo.js",
+      "bytes": 18537,
+      "sha256": "ce3023686d958f0424ccc0b1de4dc6d2a5d0a7b60a95f6d8c3783444029033ef"
+    },
+    {
+      "path": "assets/RecordingLibrary-ZsqgQXJM.js",
+      "bytes": 188,
+      "sha256": "7484902877e2da22844aa94895530679ede7e10c848c8eeebc678f81ae743e88"
+    },
+    {
+      "path": "assets/delayed-memory-D6po8vbo.js",
+      "bytes": 32319,
+      "sha256": "0048e5abe389a5bbbc0223dc16881d83285eb7a27d121804fdfc4d398481ded4"
+    },
+    {
+      "path": "assets/emotions-BEqu8shg.js",
+      "bytes": 41818,
+      "sha256": "8dfbc09d04ff0099731bb803aa2ad7f355c0e893658474d293937b05edca817b"
+    },
+    {
+      "path": "assets/extended-learning-Bke-NCKH.js",
+      "bytes": 83270,
+      "sha256": "b2fd3f2353bf273498f8bd010451c8574b1e989dbba6156df540978318711fa7"
+    },
+    {
+      "path": "assets/extended-life-D0ZknYMZ.js",
+      "bytes": 33303,
+      "sha256": "b3ec8246d3d760e3bf57fabb6b44e037e8222f4743121a81ccd398d4985f003a"
+    },
+    {
+      "path": "assets/extended-logic-DeAIhx8R.js",
+      "bytes": 26472,
+      "sha256": "a9d2b3450994d1d1d76907afeee34384dfb8d20d86d7d64c12c2a3a7e49ae05c"
+    },
+    {
+      "path": "assets/extended-memory-mx5uMoEX.js",
+      "bytes": 34492,
+      "sha256": "b51fd050cb0c9730a2256eb999e42969fdedbbf02fa395b440edea726f23a7f7"
+    },
+    {
+      "path": "assets/first-BuiAZKi6.js",
+      "bytes": 19410,
+      "sha256": "22aa0c0610e1c7db0fbff5c3128a9482e5bbed1d2810ddfb1aabf470da443803"
+    },
+    {
+      "path": "assets/game-runtime-BY7ylJT_.js",
+      "bytes": 2031,
+      "sha256": "aff879f9a5381b37d9ee3ddd2497695e04915350e5bccc133d749c210082aefa"
+    },
+    {
+      "path": "assets/index-CkapsXJF.js",
+      "bytes": 394524,
+      "sha256": "38282bd196d9d09e52e3fc9d74299718ef13c945caf0d5d1ce83e7cecdff0c1b"
+    },
+    {
+      "path": "assets/index-D-oVRO-E.css",
+      "bytes": 37768,
+      "sha256": "eaad63c1c5891b607bc6293c779e438d800b06ccac0e9f56010a47f955dabb08"
+    },
+    {
+      "path": "assets/learning-ui-BFg-Uifv.js",
+      "bytes": 265640,
+      "sha256": "f860d899bb1fca587af5d46eca7a540f7ac63f65cc53b76dfab84f8753732bc5"
+    },
+    {
+      "path": "assets/lesson-content-BselWzEe.js",
+      "bytes": 250735,
+      "sha256": "e94f47e69df7e3f8940668a3636d1823a27c27082b3d4397fbdd9e265df4e1fe"
+    },
+    {
+      "path": "assets/narrative-CY5fTTQv.js",
+      "bytes": 61270,
+      "sha256": "0459bb2716fbd6028e5f58029712a42637f649bbfe334fc8b716cd3bb8690c84"
+    },
+    {
+      "path": "assets/oral-recording-BUSMiVe_.js",
+      "bytes": 4015,
+      "sha256": "cd4d387196d71bd55d316bd403fa499b29fced1a9fe6e0ba30fa11dbb93bd05f"
+    },
+    {
+      "path": "assets/organization-B-NJdKbd.js",
+      "bytes": 75757,
+      "sha256": "871c4fda9b6d2d3a57ef37ec7788eae5761fdadd080cc614b8e95503f7f54b9c"
+    },
+    {
+      "path": "assets/react-7VJPxFFw.js",
+      "bytes": 218759,
+      "sha256": "dc71e598ebc27fc0578382d1d1dc51d6d9d3990aae2ac8fe0f0205f8b4fa559c"
+    },
+    {
+      "path": "assets/rolldown-runtime-WkwZ5CU-.js",
+      "bytes": 599,
+      "sha256": "2629f2ad3cb75a57d98de697127f5af7d777ef572bbcdfa6e3ce8f438cd4527e"
+    },
+    {
+      "path": "assets/storage-CXj197Tg.js",
+      "bytes": 190918,
+      "sha256": "18ce7aaa60ee7c074684577fee36e00f79e3fb9345ddaf03212a319951f8289e"
+    },
+    {
+      "path": "assets/v1-attention-BE46qkFS.js",
+      "bytes": 20575,
+      "sha256": "ba88d9252337f02e2e6449f0fe97840ae7cd4a82f7eb6716975ee02d181ac88b"
+    },
+    {
+      "path": "assets/v1-learning-CHtNYIou.js",
+      "bytes": 51728,
+      "sha256": "551ac1ffc1916b4e2d8f9ac414ba58d18e7a5ab29e1589adff56fb8517c3c184"
+    },
+    {
+      "path": "icon.svg",
+      "bytes": 282,
+      "sha256": "f7ceba895aeb35e3bd691d826b128eea04382176ea367e91e2c2c9013409d4f4"
+    },
+    {
+      "path": "index.html",
+      "bytes": 1137,
+      "sha256": "5f1dc822d4a5980479e14bd7308db855a6cbd2a9f6ea9b674e722884840da75a"
+    },
+    {
+      "path": "manifest.webmanifest",
+      "bytes": 292,
+      "sha256": "88c7ac289a0de3df447b694bd66cea1457efa1c335b7ac0df779964062ccf999"
+    },
+    {
+      "path": "pwa-resources-mvs0orvc.json",
+      "bytes": 3899,
+      "sha256": "f07a7675ce6a12ce5e01c7c69f0a2f55fa0c5fe01a8eac4148afed0202a0ff55"
+    },
+    {
+      "path": "sw.js",
+      "bytes": 2413,
+      "sha256": "621a0d636e24c8ae6b3cb1fb13770b7df88386f37c66537cd83924791e01acbf"
+    },
+    {
+      "path": "workbox-5f44db27.js",
+      "bytes": 15156,
+      "sha256": "66c1659102b040be8cef428c7253307d3f52aee6c3ceddf6506ef02e43a8b8bd"
+    }
+  ]
+}
