@@ -34,6 +34,7 @@ jobs:
         env:
           ELAN_SMOKE_OUTPUT_DIR: ${{ github.workspace }}
           ELAN_SMOKE_PACKAGE_ROOT: ${{ github.workspace }}
+          ELAN_EXPECTED_BUILD_SHA256: c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d
         run: node "$RUNNER_TEMP/elan-browser-deps/public-browser-smoke.mjs"
       - name: Conserver aussi un échec d’installation ou d’exécution
         if: always()
@@ -51,7 +52,7 @@ jobs:
               repository: process.env.GITHUB_REPOSITORY,
               sourceCommit: process.env.GITHUB_SHA,
               workflowRunId: process.env.GITHUB_RUN_ID,
-              buildSha256: '9041c98afe9294314f6e09734e56b632e05f31d64c5233b1b838cccc88f8765c',
+              buildSha256: 'c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d',
               url: 'https://gillesarnaudasse65-web.github.io/elan-app/',
               deployedToPublicURL: false, physicalDeviceTested: false,
               error: 'Aucun rapport navigateur produit ; installation=' + process.env.TOOLS_OUTCOME + ', recette=' + process.env.RECIPE_OUTCOME

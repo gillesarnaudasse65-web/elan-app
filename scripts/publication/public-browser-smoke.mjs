@@ -15,9 +15,10 @@ const origin = new URL(baseURL).origin;
 const packageRoot = resolve(process.env.ELAN_SMOKE_PACKAGE_ROOT ?? '.');
 const outputDir = resolve(process.env.ELAN_SMOKE_OUTPUT_DIR ?? 'public-browser-evidence');
 const digest = data => createHash('sha256').update(data).digest('hex');
-const nickname = 'Recette publique fictive';
+const nickname = 'Recette publique des niveaux';
+const expectedBuild = process.env.ELAN_EXPECTED_BUILD_SHA256;
 const proof = {
-  format: 'elan-public-browser-recipe', version: 1,
+  format: 'elan-public-browser-recipe', version: 1, scenario: 'difficulty-levels-1-to-3',
   createdAt: new Date().toISOString(), passed: false,
   repository: process.env.GITHUB_REPOSITORY ?? 'gillesarnaudasse65-web/elan-app',
   url: baseURL, checkedURL: baseURL, deployedToPublicURL: !local,
@@ -52,6 +53,58 @@ async function navigate(name) {
   throw new Error(`Visible navigation absent: ${name}`);
 }
 
+async function startPairs(expectedLevel) {
+  await navigate('Explorer');
+  await page.getByRole('textbox', { name: 'Rechercher une activité', exact: true }).fill('Cartes jumelles');
+  const card = page.locator('article.activity-card').filter({ has: page.getByRole('heading', { name: 'Cartes jumelles', exact: true }) });
+  await card.getByRole('button', { name: 'Découvrir l’activité', exact: false }).click();
+  await page.getByRole('button', { name: 'Voir un exemple', exact: false }).click();
+  await page.getByRole('button', { name: 'Commencer l’activité', exact: false }).click();
+  await expect(page.locator('.memory-card').first()).toBeVisible();
+  const runs = await store('runs');
+  assert.equal(runs.length, 1);
+  assert.equal(runs[0].gameId, '01');
+  assert.equal(runs[0].level, expectedLevel);
+  await expect(page.locator('.session-header .pill')).toContainText(`Niveau ${expectedLevel}`);
+  const cardCount = await page.locator('.memory-card').count();
+  assert.equal(cardCount, expectedLevel === 1 ? 6 : 10);
+  return { run: runs[0], cardCount };
+}
+
+async function finishPairs(run, cardCount, profileId) {
+  await page.getByRole('button', { name: 'Aide : observer toutes les cartes', exact: true }).click();
+  const labels = await page.locator('.memory-card').evaluateAll(cards => cards.map(card => card.getAttribute('aria-label') ?? ''));
+  assert.equal(labels.length, cardCount);
+  const groups = new Map();
+  labels.forEach((label, index) => {
+    const symbol = label.split(' : ')[1];
+    assert.ok(symbol);
+    groups.set(symbol, [...(groups.get(symbol) ?? []), index]);
+  });
+  assert.equal(groups.size, cardCount / 2);
+  for (const indices of groups.values()) assert.equal(indices.length, 2);
+  await page.getByRole('button', { name: 'Masquer les cartes', exact: true }).click();
+  for (const indices of groups.values()) for (const index of indices) await page.locator('.memory-card').nth(index).click();
+  await page.getByRole('button', { name: 'Voir mon résultat', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Comprendre vos réponses', exact: true })).toBeVisible();
+  await expect(page.getByRole('status').filter({ hasText: '✓ Enregistré sur cet appareil' })).toBeVisible();
+  const attempt = (await store('attempts')).find(entry => entry.id === run.id);
+  assert.ok(attempt);
+  assert.equal(attempt.profileId, profileId);
+  assert.equal(attempt.gameId, run.gameId);
+  assert.equal(attempt.gameId, '01');
+  assert.equal(attempt.level, run.level);
+  assert.equal(attempt.seed, run.seed);
+  assert.equal(attempt.gameVersion, run.gameVersion);
+  assert.equal(attempt.status, 'complete');
+  assert.equal(attempt.outcome.items, cardCount / 2);
+  assert.equal(attempt.outcome.correct, cardCount / 2);
+  assert.equal(attempt.outcome.errors, 0);
+  assert.equal(attempt.outcome.hints, 1);
+  await page.getByRole('button', { name: 'Terminer pour aujourd’hui', exact: true }).click();
+  return attempt;
+}
+
 try {
   const meta = JSON.parse(await readFile(resolve(packageRoot, 'publication-meta.json'), 'utf8'));
   assert.equal(meta.repository, 'gillesarnaudasse65-web/elan-app');
@@ -59,7 +112,9 @@ try {
   if (!local) assert.match(proof.sourceCommit ?? '', /^[a-f0-9]{40}$/);
   assert.equal(meta.basePath, mount);
   assert.equal(meta.fileCount, 28);
-  assert.equal(meta.buildSha256, '9041c98afe9294314f6e09734e56b632e05f31d64c5233b1b838cccc88f8765c');
+  assert.match(expectedBuild ?? '', /^[a-f0-9]{64}$/);
+  assert.equal(meta.buildSha256, expectedBuild);
+  proof.expectedBuildSha256 = expectedBuild;
   proof.buildSha256 = meta.buildSha256;
   const byPath = new Map(meta.files.map(file => [file.path, file]));
   browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
@@ -97,42 +152,58 @@ try {
   await page.getByRole('textbox', { name: 'Pseudonyme', exact: true }).fill(nickname);
   await page.getByRole('button', { name: 'Créer mon profil', exact: false }).click();
   await expect(page.getByRole('heading', { name: `Bonjour ${nickname}.`, exact: true })).toBeVisible();
-  const profiles = await store('profiles');
-  assert.equal(profiles.length, 1);
-  assert.equal(profiles[0].nickname, nickname);
+  const originalProfiles = await store('profiles');
+  assert.equal(originalProfiles.length, 1);
+  assert.equal(originalProfiles[0].nickname, nickname);
+  assert.equal(originalProfiles[0].difficulty, 1);
+  const first = await startPairs(1);
+  assert.equal(first.run.profileId, originalProfiles[0].id);
+  const firstAttempt = await finishPairs(first.run, first.cardCount, originalProfiles[0].id);
+  const firstAttempts = await store('attempts');
+  assert.deepEqual(firstAttempts, [firstAttempt]);
   await navigate('Explorer');
-  await page.getByRole('textbox', { name: 'Rechercher une activité', exact: true }).fill('Mission en étapes');
-  const card = page.locator('article.activity-card').filter({ has: page.getByRole('heading', { name: 'Mission en étapes', exact: true }) });
-  await card.getByRole('button', { name: 'Découvrir l’activité', exact: false }).click();
-  await page.getByRole('button', { name: 'Voir un exemple', exact: false }).click();
-  await page.getByRole('button', { name: 'Commencer l’activité', exact: false }).click();
-  await expect(page.locator('.game-fieldset')).toBeVisible();
-  const runs = await store('runs');
-  assert.equal(runs.length, 1);
-  for (const [index, label] of ['Je prépare le matériel', 'Je réalise la tâche', 'Je range le matériel'].entries()) {
-    let position = (await page.locator('.order-list li > span:nth-child(2)').allTextContents()).indexOf(label);
-    assert.ok(position >= index);
-    while (position > index) { await page.getByRole('button', { name: `Monter ${label}`, exact: true }).click(); position--; }
-  }
-  await page.getByRole('button', { name: 'Vérifier mon ordre', exact: true }).click();
-  await expect(page.getByText('Les étapes respectent les dépendances.', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Terminer la mission', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Comprendre vos réponses', exact: true })).toBeVisible();
-  await expect(page.getByRole('status').filter({ hasText: '✓ Enregistré sur cet appareil' })).toBeVisible();
+  const difficulty = page.getByRole('combobox', { name: 'Difficulté pour jouer', exact: true });
+  await expect(difficulty).toBeEnabled();
+  await expect(difficulty).toHaveValue('1');
+  await difficulty.selectOption('3');
+  await expect(page.getByRole('status').filter({ hasText: 'Difficulté enregistrée : niveau 3.' })).toBeVisible();
+  await expect(difficulty).toHaveValue('3');
+  await expect(difficulty).toBeEnabled();
+  const profiles = [{ ...originalProfiles[0], difficulty: 3 }];
+  assert.deepEqual(await store('profiles'), profiles);
+  assert.deepEqual(await store('attempts'), firstAttempts);
+  // The supported-level filter remains independent of the chosen playing level.
+  await page.getByRole('combobox', { name: 'Palier pris en charge', exact: true }).selectOption('5');
+  await expect(difficulty).toHaveValue('3');
+  assert.deepEqual(await store('profiles'), profiles);
+  assert.deepEqual(await store('attempts'), firstAttempts);
+  const second = await startPairs(3);
+  assert.equal(second.run.profileId, originalProfiles[0].id);
+  assert.notEqual(second.run.id, first.run.id);
+  assert.ok(second.cardCount > first.cardCount);
+  const secondAttempt = await finishPairs(second.run, second.cardCount, originalProfiles[0].id);
   const attempts = await store('attempts');
-  assert.equal(attempts.length, 1);
-  assert.equal(attempts[0].id, runs[0].id);
-  assert.equal(attempts[0].profileId, profiles[0].id);
-  assert.equal(attempts[0].seed, runs[0].seed);
-  assert.equal(attempts[0].gameVersion, runs[0].gameVersion);
-  assert.equal(attempts[0].status, 'complete');
-  assert.equal(attempts[0].outcome.correct, 3);
-  assert.equal(attempts[0].outcome.errors, 0);
-  await page.getByRole('button', { name: 'Terminer pour aujourd’hui', exact: true }).click();
+  assert.equal(attempts.length, 2);
+  assert.deepEqual(attempts.find(entry => entry.id === first.run.id), firstAttempt);
+  assert.deepEqual(attempts.find(entry => entry.id === second.run.id), secondAttempt);
+  assert.deepEqual(await store('runs'), []);
   await page.reload();
-  await navigate('Mes progrès');
-  await expect(page.locator('.history-item')).toHaveCount(1);
+  assert.equal(page.url(), baseURL);
+  await navigate('Explorer');
+  await expect(page.getByRole('combobox', { name: 'Difficulté pour jouer', exact: true })).toHaveValue('3');
+  assert.deepEqual(await store('profiles'), profiles);
   assert.deepEqual(await store('attempts'), attempts);
+  await navigate('Mes progrès');
+  await expect(page.locator('.history-item')).toHaveCount(2);
+  proof.playedActivities = [
+    { gameId: first.run.gameId, runLevel: first.run.level, attemptLevel: firstAttempt.level,
+      cardCount: first.cardCount, pairs: firstAttempt.outcome.items, correct: firstAttempt.outcome.correct },
+    { gameId: second.run.gameId, runLevel: second.run.level, attemptLevel: secondAttempt.level,
+      cardCount: second.cardCount, pairs: secondAttempt.outcome.items, correct: secondAttempt.outcome.correct },
+  ];
+  Object.assign(proof, { difficultyChangeVerified: true, supportedLevelFilterIndependent: true,
+    profileDifficultyAfterReload: profiles[0].difficulty, previousAttemptUnchanged: true,
+    cardCountIncreased: second.cardCount > first.cardCount });
   await navigate('Réglages & données');
   const downloadWait = page.waitForEvent('download');
   await page.getByRole('button', { name: 'Exporter une sauvegarde', exact: false }).click();
@@ -157,13 +228,15 @@ try {
   assert.equal(page.url(), baseURL);
   await expect(page.getByRole('status').filter({ hasText: 'Vous êtes hors connexion.' })).toBeVisible();
   await navigate('Mes progrès');
-  await expect(page.locator('.history-item')).toHaveCount(1);
+  await expect(page.locator('.history-item')).toHaveCount(2);
   assert.deepEqual(await store('profiles'), profiles);
   assert.deepEqual(await store('attempts'), attempts);
   assert.equal(await page.evaluate(() => navigator.onLine), false);
   assert.deepEqual(errors, []);
   Object.assign(proof, { passed: true, persistedProfiles: profiles.length, persistedAttempts: attempts.length,
-    activity: '01', correctionVerified: true, resultVerified: true, offlineReloadVerified: true, pageErrors: errors });
+    activity: first.run.gameId, gameIds: [...new Set([first.run.gameId, second.run.gameId])],
+    levels: [firstAttempt.level, secondAttempt.level], finalProfileDifficulty: profiles[0].difficulty,
+    correctionVerified: true, resultVerified: true, offlineReloadVerified: true, pageErrors: errors });
 } catch (error) {
   proof.error = String(error?.message ?? error).slice(0, 3000);
   proof.pageErrors = errors;
