@@ -1,0 +1,36 @@
+{
+  "format": "elan-public-browser-recipe",
+  "version": 1,
+  "createdAt": "2026-10-28T12:08:11.333Z",
+  "passed": true,
+  "repository": "gillesarnaudasse65-web/elan-app",
+  "url": "https://gillesarnaudasse65-web.github.io/elan-app/",
+  "checkedURL": "https://gillesarnaudasse65-web.github.io/elan-app/",
+  "deployedToPublicURL": true,
+  "physicalDeviceTested": false,
+  "execution": "automated-isolated-browser",
+  "sourceCommit": "5f8f577f31ad62612b4ca709e9a8bfbc1487d387",
+  "workflowRunId": "40685306904",
+  "buildSha256": "9041c98afe9294314f6e09734e56b632e05f31d64c5233b1b838cccc88f8765c",
+  "browserVersion": "156.0.8078.4",
+  "manifest": {
+    "start_url": "/elan-app/",
+    "scope": "/elan-app/"
+  },
+  "resourceManifest": "pwa-resources-mvs0orvc.json",
+  "exportVerified": true,
+  "registrations": [
+    {
+      "scope": "https://gillesarnaudasse65-web.github.io/elan-app/",
+      "script": "https://gillesarnaudasse65-web.github.io/elan-app/sw.js"
+    }
+  ],
+  "persistedProfiles": 1,
+  "persistedAttempts": 1,
+  "activity": "01",
+  "correctionVerified": true,
+  "resultVerified": true,
+  "offlineReloadVerified": true,
+  "pageErrors": [],
+  "completedAt": "2026-10-28T12:08:13.973Z"
+}
