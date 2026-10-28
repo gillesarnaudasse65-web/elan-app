@@ -1,0 +1,50 @@
+{
+  "format": "elan-publication-attestation",
+  "version": 1,
+  "createdAt": "2026-10-28T11:46:16.828Z",
+  "sourceCommit": "266edeaa1fb9219e1e6f055484f7e8e51037428e",
+  "sourceCommitMeaning": "Commit exact de la branche de publication exécuté par GitHub Actions ; les sources applicatives locales sont identifiées séparément par sourceTreeSha256.",
+  "repository": "gillesarnaudasse65-web/elan-app",
+  "sourceRepository": "gillesarnaudasse65-web/Elan",
+  "repositoryBaseCommit": "8d38021c22bebf3d4836e04389e22ce102c949d1",
+  "repositoryBaseCommitMeaning": "Commit de départ du dépôt source privé gillesarnaudasse65-web/Elan ; il ne représente pas un commit de la cible publique gillesarnaudasse65-web/elan-app.",
+  "sourceWorkingTreeUncommitted": true,
+  "sourceTreeSha256": "22b4d9432c70d4f2049774a88736687f4eec237086460b56db9f7af94d48fd13",
+  "buildSha256": "9041c98afe9294314f6e09734e56b632e05f31d64c5233b1b838cccc88f8765c",
+  "fileCount": 28,
+  "basePath": "/elan-app/",
+  "configOutcome": "failure",
+  "deployOutcome": "skipped",
+  "deployJobOutcome": "failure",
+  "verifiedURL": null,
+  "verificationPassed": false,
+  "checkedURL": null,
+  "resources": [],
+  "errors": [
+    "Configuration Pages : failure. La cause précise doit être établie par le diagnostic borné du workflow ; aucune permission ou offre du dépôt n’est présumée responsable.",
+    "Déploiement Pages : skipped ; job : failure. Aucune URL vérifiée ne peut être annoncée."
+  ],
+  "workflowRunId": "40682488786",
+  "configurationDiagnostic": {
+    "status": "collected",
+    "scope": "current-run/deploy/configure-pages",
+    "jobId": 122796430014,
+    "checkRunId": "122796430014",
+    "annotations": [
+      {
+        "level": "failure",
+        "title": "",
+        "message": "HttpError: Resource not accessible by integration - https://docs.github.com/rest/pages/pages#create-a-apiname-pages-site",
+        "path": ".github",
+        "startLine": 8
+      },
+      {
+        "level": "failure",
+        "title": "HttpError",
+        "message": "Create Pages site failed. Error: Resource not accessible by integration - https://docs.github.com/rest/pages/pages#create-a-apiname-pages-site",
+        "path": "/home/runner/work/_actions/actions/configure-pages/983d7736d9b0ae728b81ab479565c72886d7745b/node_modules/@octokit/request/dist-node/index.js",
+        "startLine": 124
+      }
+    ]
+  }
+}
