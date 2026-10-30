@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { verifyDeployment } from './healthcheck.mjs';
-import { validateMetadata } from './model.mjs';
+import { validateMetadata, APK_PATH, ANDROID_METADATA_PATH } from './model.mjs';
 import { collectPagesConfigurationDiagnostic } from './diagnostics.mjs';
 
 export async function createAttestation(meta, input, verify = verifyDeployment) {
@@ -13,7 +13,8 @@ export async function createAttestation(meta, input, verify = verifyDeployment) 
     repository: meta.repository, sourceRepository: meta.sourceRepository, repositoryBaseCommit: meta.repositoryBaseCommit,
     repositoryBaseCommitMeaning: 'Commit de départ du dépôt source privé gillesarnaudasse65-web/Elan ; il ne représente pas un commit de la cible publique gillesarnaudasse65-web/elan-app.',
     sourceWorkingTreeUncommitted: meta.sourceWorkingTreeUncommitted, sourceTreeSha256: meta.sourceTreeSha256,
-    buildSha256: meta.buildSha256, fileCount: meta.fileCount, basePath: meta.basePath,
+    buildSha256: meta.buildSha256, fileCount: meta.fileCount, webFileCount: meta.webFileCount, basePath: meta.basePath,
+    androidRelease: meta.androidRelease, androidDownloadVerified: false, verifiedAndroidURL: null,
     configOutcome: outcome(input.configOutcome), deployOutcome: outcome(input.deployOutcome), deployJobOutcome: outcome(input.deployJobOutcome),
     verifiedURL: null, verificationPassed: false, checkedURL: null, resources: [], errors: [],
     workflowRunId: /^\d+$/.test(input.workflowRunId ?? '') ? input.workflowRunId : null,
@@ -25,9 +26,17 @@ export async function createAttestation(meta, input, verify = verifyDeployment) 
     try {
       const check = await verify(meta, input.pageUrl);
       report.checkedURL = check.checkedURL; report.resources = check.resources;
-      report.verificationPassed = check.passed === true && check.resources.length === meta.files.length + 1 && check.resources.every(resource => resource.passed === true);
-      if (report.verificationPassed) report.verifiedURL = check.verifiedURL;
-      else report.errors.push('La page publique ou au moins une ressource ne correspond pas au build attendu ; aucune publication réussie attestée.');
+      const apk = check.resources.find(resource => resource.path === APK_PATH);
+      const androidMetadata = check.resources.find(resource => resource.path === ANDROID_METADATA_PATH);
+      report.androidDownloadVerified = apk?.passed === true && apk.status === 200 && apk.bytes === meta.androidRelease.bytes && apk.sha256 === meta.androidRelease.sha256 && androidMetadata?.passed === true && androidMetadata.status === 200;
+      const expected = new Map(meta.files.map(file => [file.path, file]));
+      expected.set('(page_url)', expected.get('index.html'));
+      const complete = Array.isArray(check.resources) && check.resources.length === expected.size && new Set(check.resources.map(resource => resource.path)).size === expected.size
+        && check.resources.every(resource => { const file = expected.get(resource.path); return file && resource.passed === true && resource.status === 200 && resource.bytes === file.bytes && resource.sha256 === file.sha256; });
+      if (check.passed === true && report.androidDownloadVerified === true && complete && typeof check.verifiedURL === 'string' && check.verifiedURL === check.checkedURL) {
+        const androidURL = new URL(APK_PATH, check.verifiedURL).href;
+        report.verifiedURL = check.verifiedURL; report.verifiedAndroidURL = androidURL; report.verificationPassed = true;
+      } else report.errors.push('La page publique ou au moins une ressource ne correspond pas au build attendu ; aucune publication réussie attestée.');
     } catch (error) { report.errors.push(error.message); }
   }
   return report;
