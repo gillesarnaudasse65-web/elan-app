@@ -36,7 +36,7 @@ jobs:
         uses: actions/configure-pages@983d7736d9b0ae728b81ab479565c72886d7745b # v5
         with:
           enablement: true
-      - name: Vérifier le sous-chemin Pages réel et les 28 fichiers
+      - name: Vérifier le sous-chemin Pages et le paquet web/Android exact
         env:
           PAGES_CONFIGURED_BASE_PATH: ${{ steps.pages.outputs.base_path }}
         run: node scripts/publication/assert-pages.mjs

@@ -14,7 +14,7 @@ async function fetchHash(url, file, { fetchImpl, timeoutMs }) {
 export async function verifyDeployment(meta, pageUrl, options = {}) {
   validateMetadata(meta);
   const base = deploymentUrl(pageUrl, meta, options.allowHttpForTests === true);
-  const fetchImpl = options.fetchImpl ?? fetch, timeoutMs = options.timeoutMs ?? 8000;
+  const fetchImpl = options.fetchImpl ?? fetch, timeoutMs = options.timeoutMs ?? 20000;
   const waits = options.retryDelays ?? [0, 1000, 2000];
   const pause = options.pause ?? (milliseconds => new Promise(resolve => setTimeout(resolve, milliseconds)));
   const index = meta.files.find(file => file.path === 'index.html');

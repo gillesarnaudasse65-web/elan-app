@@ -1,18 +1,19 @@
-# Paquet de publication Élan
+# Publication Élan web et Android 0.2.0
 
-Cette branche isolée contient uniquement les 28 fichiers de l’application dans site/, un manifeste SHA256 et le workflow natif de publication. Aucune donnée de profil, sauvegarde, documentation source ou ressource personnelle n’est incluse dans site/. Aucun package npm ni installation n’est nécessaire en CI.
+Cible : https://gillesarnaudasse65-web.github.io/elan-app/
 
-Build SHA256 : c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d
-Sources locales SHA256 : a3a8cbea2b25926cccdf576bb710b7b6daa0cca9603a230d7fe20545dfc23605
-Commit de départ du dépôt source privé Elan (absent de l’historique de la cible publique ; pas le commit des sources locales) : 8d38021c22bebf3d4836e04389e22ce102c949d1
-Sous-chemin obligatoire : /elan-app/
+Le dossier site/ contient 30 fichiers web et deux fichiers de distribution Android : downloads/elan-android-v0.2.0.apk et android-release.json. Seul site/ est publié, jamais les sources privées, bases de profils, exports personnels ou clés de signature.
 
-Prérequis du titulaire : créer le dépôt public dédié puis activer Settings → Pages → Source : GitHub Actions avant le premier déploiement. Selon configure-pages v5, la création du site exige un jeton autre que GITHUB_TOKEN, avec administration:write et pages:write pour une GitHub App. Ce paquet ne demande aucun PAT ni secret supplémentaire ; le jeton automatique du workflow ne fournit pas ces droits. enablement:true ne garantit donc aucune activation et les échecs restent explicites.
+Build complet SHA256 : e13db1535da4104b3712d40f79ef436b8d9e8e9873470856f39eb61990f3f50e
+Source privée SHA256 : eed758637a5b92b97ba8bf63cacfa99880da3d743a42cae881fc29ad98535c0d
+Commit de départ privé (pas celui de la cible publique) : 8d38021c22bebf3d4836e04389e22ce102c949d1
+APK SHA256 : 6b30a58088a19f32c17eb1b6496afbb705aa3c94edf7c916012dd63459eab092
+APK octets : 3768240
 
-Un push sur elan-publication déclenche configure-pages (activation éventuellement tentée avec les seuls droits disponibles), une garde sur le base_path réel /elan-app, upload de site/ puis deploy-pages. Aucune modification de main ni désactivation d’une ancienne configuration Pages n’est demandée. Les refus de permissions, de plan ou de politique Actions doivent rester visibles.
+L’APK est ajouté après les builds Android et web ; il ne fait partie ni du précache ni des ressources PWA requises pour le hors ligne. Le même site sert le téléchargement, sans autre fournisseur ou API de publication. La validation de signature et les essais Android sont documentés séparément ; une vérification HTTP ne vaut pas installation sur un appareil.
 
-Après la tentative, le job report vérifie l’URL HTTPS rendue par deploy-pages, le vrai manifeste et chaque fichier attendu par taille et SHA256, avec de courts réessais. Le succès n’est attesté que si la page et tous les fichiers correspondent. Le rapport inclut le SHA réel du commit de publication exécuté (github.sha), le build, la configuration, le déploiement, les ressources et l’URL vérifiée.
+Un push normal sur elan-publication déclenche le workflow de déploiement, déjà activé par le titulaire sur ce dépôt. Les actions officielles sont épinglées ; la garde Pages et les empreintes sont vérifiées avant upload. Aucun déploiement sur main, force-push ou changement du dépôt source privé n’est demandé.
 
-L’attestation publication-status.json est persistée sur elan-publication-status par git normal sans force-push. Cette branche ne déclenche aucun déploiement. Un échec de vérification ou de persistance fait échouer le job ; ne pas annoncer l’URL comme fonctionnelle avant verificationPassed:true. L’adresse attendue https://gillesarnaudasse65-web.github.io/elan-app/ est une cible, pas une preuve de publication.
+Le rapport vérifie la racine et chacun des 32 fichiers (web, métadonnées et APK) par HTTPS, taille et SHA256. Il atteste séparément androidDownloadVerified et conserve les refus/échecs ; aucune réussite n’est annoncée avant verificationPassed:true. L’attestation est conservée sans force-push sur elan-publication-status.
 
-L’application reste une édition locale accompagnée : la disponibilité publique ne constitue pas une revue pédagogique, une validation phonétique ou une synchronisation de données. Les données restent sur l’appareil de chaque personne.
+L’application reste locale : les profils sont conservés sur chaque appareil/origine, sans compte ni synchronisation. Une nouvelle installation Android n’importe pas automatiquement les données du navigateur.
