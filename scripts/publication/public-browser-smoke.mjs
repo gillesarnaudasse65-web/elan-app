@@ -15,10 +15,24 @@ const origin = new URL(baseURL).origin;
 const packageRoot = resolve(process.env.ELAN_SMOKE_PACKAGE_ROOT ?? '.');
 const outputDir = resolve(process.env.ELAN_SMOKE_OUTPUT_DIR ?? 'public-browser-evidence');
 const digest = data => createHash('sha256').update(data).digest('hex');
-const nickname = 'Recette publique des niveaux';
+const nickname = 'Recette Élan web et Android';
+const APK_PATH = 'downloads/elan-android-v0.2.0.apk';
+const ANDROID_METADATA_PATH = 'android-release.json';
+function canonical(value) {
+  if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
+  if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}';
+  return JSON.stringify(value);
+}
+async function checkDashboard(activityCount, domains) {
+  const widgets = page.getByRole('region', { name: 'Votre pratique en un regard', exact: true });
+  await expect(widgets).toBeVisible();
+  await expect(widgets.locator('.practice-day')).toHaveCount(7);
+  await expect(widgets.locator('.week-widget')).toContainText(`${activityCount} ${activityCount === 1 ? 'activité' : 'activités'} cette semaine.`);
+  await expect(widgets.getByRole('heading', { name: `${domains} ${domains === 1 ? 'domaine exploré' : 'domaines explorés'}`, exact: true })).toBeVisible();
+}
 const expectedBuild = process.env.ELAN_EXPECTED_BUILD_SHA256;
 const proof = {
-  format: 'elan-public-browser-recipe', version: 1, scenario: 'difficulty-levels-1-to-3',
+  format: 'elan-public-browser-recipe', version: 2, scenario: 'redesign-android-and-difficulty-levels-1-to-3',
   createdAt: new Date().toISOString(), passed: false,
   repository: process.env.GITHUB_REPOSITORY ?? 'gillesarnaudasse65-web/elan-app',
   url: baseURL, checkedURL: baseURL, deployedToPublicURL: !local,
@@ -58,8 +72,12 @@ async function startPairs(expectedLevel) {
   await page.getByRole('textbox', { name: 'Rechercher une activité', exact: true }).fill('Cartes jumelles');
   const card = page.locator('article.activity-card').filter({ has: page.getByRole('heading', { name: 'Cartes jumelles', exact: true }) });
   await card.getByRole('button', { name: 'Découvrir l’activité', exact: false }).click();
+  const journey = page.getByRole('list', { name: 'Étapes de l’activité', exact: true });
+  await expect(journey.locator('[aria-current="step"]')).toContainText('Consigne');
   await page.getByRole('button', { name: 'Voir un exemple', exact: false }).click();
+  await expect(journey.locator('[aria-current="step"]')).toContainText('Exemple');
   await page.getByRole('button', { name: 'Commencer l’activité', exact: false }).click();
+  await expect(journey.locator('[aria-current="step"]')).toContainText('Jeu');
   await expect(page.locator('.memory-card').first()).toBeVisible();
   const runs = await store('runs');
   assert.equal(runs.length, 1);
@@ -87,6 +105,7 @@ async function finishPairs(run, cardCount, profileId) {
   for (const indices of groups.values()) for (const index of indices) await page.locator('.memory-card').nth(index).click();
   await page.getByRole('button', { name: 'Voir mon résultat', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Comprendre vos réponses', exact: true })).toBeVisible();
+  await expect(page.getByRole('list', { name: 'Étapes de l’activité', exact: true }).locator('[aria-current="step"]')).toContainText('Bilan');
   await expect(page.getByRole('status').filter({ hasText: '✓ Enregistré sur cet appareil' })).toBeVisible();
   const attempt = (await store('attempts')).find(entry => entry.id === run.id);
   assert.ok(attempt);
@@ -111,12 +130,32 @@ try {
   assert.equal(proof.repository, meta.repository);
   if (!local) assert.match(proof.sourceCommit ?? '', /^[a-f0-9]{40}$/);
   assert.equal(meta.basePath, mount);
-  assert.equal(meta.fileCount, 28);
+  assert.equal(meta.format, 'elan-publication');
+  assert.equal(meta.version, 2);
+  assert.equal(meta.fileCount, 32);
+  assert.equal(meta.webFileCount, 30);
+  assert.equal(meta.files.length, meta.fileCount);
+  assert.equal(new Set(meta.files.map(file => file.path)).size, meta.fileCount);
+  for (const file of meta.files) {
+    assert.match(file.path, /^(?:assets\/[A-Za-z0-9_-]+\.(?:js|css|png|svg|webp|woff2)|(?:icon(?:-192|-512)?\.(?:svg|png))|index\.html|manifest\.webmanifest|sw\.js|workbox-[A-Za-z0-9_-]+\.js|pwa-resources-[A-Za-z0-9_-]+\.json|android-release\.json|downloads\/elan-android-v0\.2\.0\.apk)$/);
+    assert.ok(Number.isSafeInteger(file.bytes) && file.bytes > 0 && file.bytes <= (file.path === APK_PATH ? 50000000 : 10000000));
+    assert.match(file.sha256, /^[a-f0-9]{64}$/);
+  }
+  assert.equal(digest(canonical({ basePath: meta.basePath, files: meta.files })), meta.buildSha256);
+  assert.equal(meta.androidRelease?.version, '0.2.0');
+  assert.equal(meta.androidRelease?.minAndroid, 7);
+  assert.equal(meta.androidRelease?.url, APK_PATH);
   assert.match(expectedBuild ?? '', /^[a-f0-9]{64}$/);
   assert.equal(meta.buildSha256, expectedBuild);
   proof.expectedBuildSha256 = expectedBuild;
   proof.buildSha256 = meta.buildSha256;
   const byPath = new Map(meta.files.map(file => [file.path, file]));
+  const apkFile = byPath.get(APK_PATH);
+  assert.ok(apkFile);
+  assert.equal(meta.androidRelease.bytes, apkFile.bytes);
+  assert.equal(meta.androidRelease.sha256, apkFile.sha256);
+  assert.ok(byPath.has(ANDROID_METADATA_PATH));
+  proof.publicationVersion = meta.version; proof.fileCount = meta.fileCount; proof.webFileCount = meta.webFileCount;
   browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   proof.browserVersion = browser.version();
   const context = await browser.newContext({
@@ -143,15 +182,64 @@ try {
   assert.equal(new URL(manifest.start_url, manifestURL).pathname, mount);
   assert.equal(new URL(manifest.scope, manifestURL).pathname, mount);
   proof.manifest = { start_url: manifest.start_url, scope: manifest.scope };
+  proof.appIconDimensions = [];
+  for (const size of [192, 512]) {
+    const path = `icon-${size}.png`;
+    const icon = manifest.icons.find(item => item.src === mount + path && item.sizes === `${size}x${size}`);
+    assert.ok(icon);
+    const response = await context.request.get(new URL(path, baseURL).href);
+    assert.equal(response.status(), 200);
+    const bytes = await response.body();
+    assert.equal(bytes.length, byPath.get(path).bytes); assert.equal(digest(bytes), byPath.get(path).sha256);
+    assert.equal(bytes.subarray(0,8).toString('hex'), '89504e470d0a1a0a');
+    assert.equal(bytes.readUInt32BE(16), size); assert.equal(bytes.readUInt32BE(20), size);
+    proof.appIconDimensions.push(size);
+  }
   const cacheResponse = await context.request.get(new URL(meta.resourceManifest, baseURL).href);
   assert.equal(cacheResponse.status(), 200);
   assert.equal(digest(await cacheResponse.body()), byPath.get(meta.resourceManifest).sha256);
   proof.resourceManifest = meta.resourceManifest;
+  const cache = await cacheResponse.json();
+  assert.ok(Array.isArray(cache.resources));
+  assert.ok(cache.resources.every(resource => ![mount + APK_PATH, mount + ANDROID_METADATA_PATH].includes(resource.url)));
+  proof.apkExcludedFromPwaResources = true;
+
+  const androidMetadata = await context.request.get(new URL(ANDROID_METADATA_PATH, baseURL).href);
+  assert.equal(androidMetadata.status(), 200);
+  const androidBytes = await androidMetadata.body();
+  assert.equal(androidBytes.length, byPath.get(ANDROID_METADATA_PATH).bytes);
+  assert.equal(digest(androidBytes), byPath.get(ANDROID_METADATA_PATH).sha256);
+  assert.deepEqual(JSON.parse(androidBytes.toString('utf8')), meta.androidRelease);
+  const androidLink = page.getByRole('link', { name: 'Télécharger l’APK Android', exact: true });
+  await expect(androidLink).toBeVisible();
+  const apkURL = new URL(await androidLink.getAttribute('href'), baseURL);
+  assert.equal(apkURL.href, new URL(APK_PATH, baseURL).href);
+  const apkResponse = await context.request.get(apkURL.href);
+  assert.equal(apkResponse.status(), 200);
+  const receivedApk = await apkResponse.body();
+  assert.equal(receivedApk.length, apkFile.bytes); assert.equal(digest(receivedApk), apkFile.sha256);
+  assert.equal(receivedApk.subarray(0,4).toString('hex'), '504b0304');
+  const androidDownloadWait = page.waitForEvent('download');
+  await androidLink.click();
+  const androidDownload = await androidDownloadWait;
+  assert.equal(await androidDownload.failure(), null);
+  assert.equal(androidDownload.suggestedFilename(), 'elan-android-v0.2.0.apk');
+  const androidDownloadPath = await androidDownload.path(); assert.ok(androidDownloadPath);
+  const downloadedApk = await readFile(androidDownloadPath);
+  assert.equal(downloadedApk.length, apkFile.bytes); assert.equal(digest(downloadedApk), apkFile.sha256);
+  assert.equal(page.url(), baseURL);
+  proof.androidDownload = { verified: true, metadataVerified: true, browserDownloadVerified: true, url: apkURL.href, status: apkResponse.status(), bytes: downloadedApk.length, sha256: digest(downloadedApk), version: meta.androidRelease.version, minAndroid: meta.androidRelease.minAndroid, physicalInstallationTested: false };
+  proof.androidDownloadVerified = true;
 
   await page.getByRole('button', { name: 'Créer mon premier profil', exact: false }).click();
   await page.getByRole('textbox', { name: 'Pseudonyme', exact: true }).fill(nickname);
   await page.getByRole('button', { name: 'Créer mon profil', exact: false }).click();
   await expect(page.getByRole('heading', { name: `Bonjour ${nickname}.`, exact: true })).toBeVisible();
+  await expect(page.locator('.daily-hero .brand-scene')).toBeVisible();
+  await checkDashboard(0, 0);
+  await page.getByRole('button', { name: 'Choisir une activité', exact: true }).click();
+  await expect(page.getByRole('group', { name: 'Domaines', exact: true })).toBeVisible();
+  await expect(page.getByRole('group', { name: 'Domaines', exact: true }).getByRole('button')).toHaveCount(9);
   const originalProfiles = await store('profiles');
   assert.equal(originalProfiles.length, 1);
   assert.equal(originalProfiles[0].nickname, nickname);
@@ -159,6 +247,7 @@ try {
   const first = await startPairs(1);
   assert.equal(first.run.profileId, originalProfiles[0].id);
   const firstAttempt = await finishPairs(first.run, first.cardCount, originalProfiles[0].id);
+  await checkDashboard(1, 1);
   const firstAttempts = await store('attempts');
   assert.deepEqual(firstAttempts, [firstAttempt]);
   await navigate('Explorer');
@@ -182,6 +271,8 @@ try {
   assert.notEqual(second.run.id, first.run.id);
   assert.ok(second.cardCount > first.cardCount);
   const secondAttempt = await finishPairs(second.run, second.cardCount, originalProfiles[0].id);
+  await checkDashboard(2, 1);
+  proof.modernInterfaceVerified = true; proof.dashboardWidgetsVerified = true; proof.activityJourneyVerified = true;
   const attempts = await store('attempts');
   assert.equal(attempts.length, 2);
   assert.deepEqual(attempts.find(entry => entry.id === first.run.id), firstAttempt);
@@ -232,6 +323,16 @@ try {
   assert.deepEqual(await store('profiles'), profiles);
   assert.deepEqual(await store('attempts'), attempts);
   assert.equal(await page.evaluate(() => navigator.onLine), false);
+  await navigate('Aujourd’hui');
+  await checkDashboard(2, 1);
+  const cachedDownloadPaths = await page.evaluate(async () => {
+    const paths = [];
+    for (const key of await caches.keys()) for (const request of await (await caches.open(key)).keys()) { const path = new URL(request.url).pathname; if (path.endsWith('.apk') || path.endsWith('/android-release.json')) paths.push(path); }
+    return paths;
+  });
+  assert.deepEqual(cachedDownloadPaths, []);
+  proof.apkExcludedFromPwaCache = true;
+  await page.evaluate(() => scrollTo(0, 0));
   assert.deepEqual(errors, []);
   Object.assign(proof, { passed: true, persistedProfiles: profiles.length, persistedAttempts: attempts.length,
     activity: first.run.gameId, gameIds: [...new Set([first.run.gameId, second.run.gameId])],

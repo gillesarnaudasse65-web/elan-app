@@ -34,7 +34,7 @@ jobs:
         env:
           ELAN_SMOKE_OUTPUT_DIR: ${{ github.workspace }}
           ELAN_SMOKE_PACKAGE_ROOT: ${{ github.workspace }}
-          ELAN_EXPECTED_BUILD_SHA256: c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d
+          ELAN_EXPECTED_BUILD_SHA256: e13db1535da4104b3712d40f79ef436b8d9e8e9873470856f39eb61990f3f50e
         run: node "$RUNNER_TEMP/elan-browser-deps/public-browser-smoke.mjs"
       - name: Conserver aussi un échec d’installation ou d’exécution
         if: always()
@@ -47,12 +47,13 @@ jobs:
           try { await access('browser-status.json'); }
           catch {
             await writeFile('browser-status.json', JSON.stringify({
-              format: 'elan-public-browser-recipe', version: 1,
+              format: 'elan-public-browser-recipe', version: 2,
+              scenario: 'redesign-android-and-difficulty-levels-1-to-3',
               createdAt: new Date().toISOString(), passed: false,
               repository: process.env.GITHUB_REPOSITORY,
               sourceCommit: process.env.GITHUB_SHA,
               workflowRunId: process.env.GITHUB_RUN_ID,
-              buildSha256: 'c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d',
+              buildSha256: 'e13db1535da4104b3712d40f79ef436b8d9e8e9873470856f39eb61990f3f50e',
               url: 'https://gillesarnaudasse65-web.github.io/elan-app/',
               deployedToPublicURL: false, physicalDeviceTested: false,
               error: 'Aucun rapport navigateur produit ; installation=' + process.env.TOOLS_OUTCOME + ', recette=' + process.env.RECIPE_OUTCOME
@@ -64,4 +65,4 @@ jobs:
         run: node scripts/publication/persist-browser-status.mjs
       - name: Exiger la réussite de la vraie recette publique
         if: always()
-        run: node --input-type=module -e "import {readFile} from 'node:fs/promises'; const report=JSON.parse(await readFile('browser-status.json','utf8')); if(report.passed!==true || report.deployedToPublicURL!==true) process.exit(1);"
+        run: node --input-type=module -e "import {readFile} from 'node:fs/promises'; const report=JSON.parse(await readFile('browser-status.json','utf8')); if(report.passed!==true || report.deployedToPublicURL!==true || report.androidDownloadVerified!==true || report.modernInterfaceVerified!==true || report.dashboardWidgetsVerified!==true || report.activityJourneyVerified!==true || report.apkExcludedFromPwaCache!==true) process.exit(1);"
