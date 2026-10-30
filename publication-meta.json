@@ -6,33 +6,58 @@
   "sourceRepository": "gillesarnaudasse65-web/Elan",
   "repositoryBaseCommit": "8d38021c22bebf3d4836e04389e22ce102c949d1",
   "sourceWorkingTreeUncommitted": true,
-  "sourceTreeSha256": "eed758637a5b92b97ba8bf63cacfa99880da3d743a42cae881fc29ad98535c0d",
-  "sourceTreeFiles": 205,
+  "sourceTreeSha256": "355ce0e4f6354c967ee1afcaa5c920fecceb2f4efa74804ec8515e412137c0fc",
+  "sourceTreeFiles": 221,
   "sourceCommitMeaning": "repositoryBaseCommit est le commit de départ du dépôt source privé gillesarnaudasse65-web/Elan, pas celui du dépôt public. Les sources locales non commitées sont identifiées par sourceTreeSha256 ; le workflow ajoute le SHA exact de publication.",
-  "fileCount": 32,
-  "webFileCount": 30,
-  "buildSha256": "e13db1535da4104b3712d40f79ef436b8d9e8e9873470856f39eb61990f3f50e",
-  "resourceManifest": "pwa-resources-mvv007je.json",
+  "fileCount": 37,
+  "webFileCount": 35,
+  "buildSha256": "81ba7e5f9168d5151b222884a830e54794b3a746f70504f520f3ffb7f878d7c7",
+  "resourceManifest": "pwa-resources-mvveuxhk.json",
   "files": [
     {
       "path": "android-release.json",
       "bytes": 217,
-      "sha256": "389c862fd648c8adf6bf838bc5a14fce7995018fcbf8b6779064078edb283727"
+      "sha256": "82386d713947e26114e04a8bf071d5ebe6963628ef8c3fb032dab8e967ad791d"
     },
     {
-      "path": "assets/MediaPacks-xR59fz0O.js",
+      "path": "assets/AccountPanel-5Wl1Oww3.js",
+      "bytes": 13332,
+      "sha256": "4a65f06da1aa35e7a5c00a56f346d6a4d2822bee26b64c4269a7cf35497b84d7"
+    },
+    {
+      "path": "assets/AccountPanel-FHPGbp31.css",
+      "bytes": 3998,
+      "sha256": "d89c46566f85d05f35a628987a55f25de0fcc75e6cd82b608d67b47ac8e72bb3"
+    },
+    {
+      "path": "assets/GameDemonstration-CkOILdxn.css",
+      "bytes": 12233,
+      "sha256": "23e91b9ec1d1df9d7584300e80ee83158f7f9c44332b6b86ba9dfb2c13738bc3"
+    },
+    {
+      "path": "assets/GameDemonstration-DbdH-WFM.js",
+      "bytes": 47418,
+      "sha256": "6f3d7a8ac8a57125c9cfb6ff4ef97ebe417177c15407298ad1a764b32b8678e5"
+    },
+    {
+      "path": "assets/MediaPacks-Do5xlEaF.js",
       "bytes": 18414,
-      "sha256": "57dc83ffeac0dd6c07e98066868bf79fa8a3ce760378b4b9f086a7d0a860843f"
+      "sha256": "0a65426a6a515ec7673398372134436a2105f592925e52436387e497411bb193"
     },
     {
-      "path": "assets/RecordingLibrary-L1pshI57.js",
-      "bytes": 188,
-      "sha256": "171516a191320b41ab44e1ae96327eb7a6b469b8e5b011f90bcd41507319f931"
+      "path": "assets/RecordingLibrary-D7Hn0jiM.js",
+      "bytes": 193,
+      "sha256": "5274194897cc766f51c71ba0e4b7ffdb69b1ad67d9ae27c53acded0dae48af55"
     },
     {
       "path": "assets/delayed-memory-D6po8vbo.js",
       "bytes": 32319,
       "sha256": "0048e5abe389a5bbbc0223dc16881d83285eb7a27d121804fdfc4d398481ded4"
+    },
+    {
+      "path": "assets/dist-DUv6x2D9.js",
+      "bytes": 214403,
+      "sha256": "db6866ba833394ba4957e6c1dee004fe61b5e61c1f385315546867c1a8366b5d"
     },
     {
       "path": "assets/emotions-BEqu8shg.js",
@@ -70,14 +95,14 @@
       "sha256": "aff879f9a5381b37d9ee3ddd2497695e04915350e5bccc133d749c210082aefa"
     },
     {
-      "path": "assets/index-CO4lPj_5.css",
-      "bytes": 71041,
-      "sha256": "8b87f3e7e72c607b684dadb4942d176d660e73d1c44120791da363bd55e541a0"
+      "path": "assets/index-BOFIpCME.js",
+      "bytes": 442851,
+      "sha256": "1a15d51e2a2edd8749567714eb0b60bd46fb9a9fba65a3e70cbdd942ab88e638"
     },
     {
-      "path": "assets/index-GHAeqk8V.js",
-      "bytes": 422351,
-      "sha256": "ece83362b2fbbac376978987e4d6c1dec03663d51989ac5987024a2acabc6905"
+      "path": "assets/index-ZS34znML.css",
+      "bytes": 70987,
+      "sha256": "dad895008d3905eb9ae1098bddfff461bb7df2c8abcad51157b5c97b17c79b55"
     },
     {
       "path": "assets/learning-ui-CuwhcC2L.js",
@@ -130,9 +155,9 @@
       "sha256": "f696d8556096984b5ff84c9ff91dd6805f577591aa06efd96602a115f08f8503"
     },
     {
-      "path": "downloads/elan-android-v0.2.0.apk",
-      "bytes": 3768240,
-      "sha256": "6b30a58088a19f32c17eb1b6496afbb705aa3c94edf7c916012dd63459eab092"
+      "path": "downloads/elan-android-v0.2.1.apk",
+      "bytes": 3855907,
+      "sha256": "6a9c2695299374778f98208ac46b206d71812c2e59b998c5c3595b8a3dbba3af"
     },
     {
       "path": "icon-192.png",
@@ -152,7 +177,7 @@
     {
       "path": "index.html",
       "bytes": 1222,
-      "sha256": "ce7820f6dd631bd17b2199a6a32957eca2282528dc05d643b78c4f3c89931945"
+      "sha256": "3f47f9e7bae1d938753138911198d4712cd2356577feeec34cd79557850b6960"
     },
     {
       "path": "manifest.webmanifest",
@@ -160,14 +185,14 @@
       "sha256": "51268bb401f01aea16c85715cac1fad59c14417e54dc3eec77358bbb44004c69"
     },
     {
-      "path": "pwa-resources-mvv007je.json",
-      "bytes": 4236,
-      "sha256": "7a798731cc1f5c0b64e1abfe09781486ff4441914e4eb3e416f670206a56b569"
+      "path": "pwa-resources-mvveuxhk.json",
+      "bytes": 5030,
+      "sha256": "6e3f72fffb5c7d32d95666fd5d201a15b6d80f22608c986d5a3fe034686131a4"
     },
     {
       "path": "sw.js",
-      "bytes": 2543,
-      "sha256": "7ebdc2d6e8398c9c2f9d0171c311c051de685206e05da6334f77fd269696d59c"
+      "bytes": 2817,
+      "sha256": "05e7b7d1c0142e6b35d0624cd9ac512d3707d194da1383fbfbfe8b37cee9f4fd"
     },
     {
       "path": "workbox-5f44db27.js",
@@ -177,11 +202,11 @@
   ],
   "androidRelease": {
     "name": "Élan Android",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "minAndroid": 7,
-    "bytes": 3768240,
-    "sha256": "6b30a58088a19f32c17eb1b6496afbb705aa3c94edf7c916012dd63459eab092",
-    "url": "downloads/elan-android-v0.2.0.apk"
+    "bytes": 3855907,
+    "sha256": "6a9c2695299374778f98208ac46b206d71812c2e59b998c5c3595b8a3dbba3af",
+    "url": "downloads/elan-android-v0.2.1.apk"
   },
   "androidVerificationScope": "APK final lié par SHA256 au binaire Android approuvé séparément. Cet outillage contrôle conteneur, taille, SHA256, publication et exclusion PWA ; il ne réalise pas de test physique Android ni la vérification de signature APK."
 }

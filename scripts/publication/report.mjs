@@ -1,6 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { verifyDeployment } from './healthcheck.mjs';
-import { validateMetadata, APK_PATH, ANDROID_METADATA_PATH } from './model.mjs';
+import { validateMetadata, ANDROID_METADATA_PATH } from './model.mjs';
 import { collectPagesConfigurationDiagnostic } from './diagnostics.mjs';
 
 export async function createAttestation(meta, input, verify = verifyDeployment) {
@@ -26,7 +26,7 @@ export async function createAttestation(meta, input, verify = verifyDeployment) 
     try {
       const check = await verify(meta, input.pageUrl);
       report.checkedURL = check.checkedURL; report.resources = check.resources;
-      const apk = check.resources.find(resource => resource.path === APK_PATH);
+      const apk = check.resources.find(resource => resource.path === meta.androidRelease.url);
       const androidMetadata = check.resources.find(resource => resource.path === ANDROID_METADATA_PATH);
       report.androidDownloadVerified = apk?.passed === true && apk.status === 200 && apk.bytes === meta.androidRelease.bytes && apk.sha256 === meta.androidRelease.sha256 && androidMetadata?.passed === true && androidMetadata.status === 200;
       const expected = new Map(meta.files.map(file => [file.path, file]));
@@ -34,7 +34,7 @@ export async function createAttestation(meta, input, verify = verifyDeployment) 
       const complete = Array.isArray(check.resources) && check.resources.length === expected.size && new Set(check.resources.map(resource => resource.path)).size === expected.size
         && check.resources.every(resource => { const file = expected.get(resource.path); return file && resource.passed === true && resource.status === 200 && resource.bytes === file.bytes && resource.sha256 === file.sha256; });
       if (check.passed === true && report.androidDownloadVerified === true && complete && typeof check.verifiedURL === 'string' && check.verifiedURL === check.checkedURL) {
-        const androidURL = new URL(APK_PATH, check.verifiedURL).href;
+        const androidURL = new URL(meta.androidRelease.url, check.verifiedURL).href;
         report.verifiedURL = check.verifiedURL; report.verifiedAndroidURL = androidURL; report.verificationPassed = true;
       } else report.errors.push('La page publique ou au moins une ressource ne correspond pas au build attendu ; aucune publication réussie attestée.');
     } catch (error) { report.errors.push(error.message); }

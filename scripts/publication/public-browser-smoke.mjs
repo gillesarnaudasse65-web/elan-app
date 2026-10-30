@@ -15,9 +15,13 @@ const origin = new URL(baseURL).origin;
 const packageRoot = resolve(process.env.ELAN_SMOKE_PACKAGE_ROOT ?? '.');
 const outputDir = resolve(process.env.ELAN_SMOKE_OUTPUT_DIR ?? 'public-browser-evidence');
 const digest = data => createHash('sha256').update(data).digest('hex');
-const nickname = 'Recette Élan web et Android';
-const APK_PATH = 'downloads/elan-android-v0.2.0.apk';
+const nickname = 'Recette Élan exemples animés';
+const APK_PATH = 'downloads/elan-android-v0.2.1.apk';
 const ANDROID_METADATA_PATH = 'android-release.json';
+// These values are frozen in the workflow only after the final package exists.
+// A pending value must fail before a browser or public download is opened.
+const expectedWebFiles = Number(process.env.ELAN_EXPECTED_WEB_FILE_COUNT);
+const expectedFiles = Number(process.env.ELAN_EXPECTED_FILE_COUNT);
 function canonical(value) {
   if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
   if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}';
@@ -32,7 +36,7 @@ async function checkDashboard(activityCount, domains) {
 }
 const expectedBuild = process.env.ELAN_EXPECTED_BUILD_SHA256;
 const proof = {
-  format: 'elan-public-browser-recipe', version: 2, scenario: 'redesign-android-and-difficulty-levels-1-to-3',
+  format: 'elan-public-browser-recipe', version: 3, scenario: 'animated-example-android-0.2.1-and-difficulty-levels-1-to-3',
   createdAt: new Date().toISOString(), passed: false,
   repository: process.env.GITHUB_REPOSITORY ?? 'gillesarnaudasse65-web/elan-app',
   url: baseURL, checkedURL: baseURL, deployedToPublicURL: !local,
@@ -67,6 +71,47 @@ async function navigate(name) {
   throw new Error(`Visible navigation absent: ${name}`);
 }
 
+async function verifyDemonstration(before) {
+  const demonstration = page.getByTestId('game-demonstration');
+  await expect(demonstration).toBeVisible();
+  await expect(demonstration).toHaveAttribute('data-game-id', '01');
+  await expect(demonstration).toHaveAttribute('data-scene-kind', 'cards');
+  await expect(demonstration).toHaveAttribute('data-reduced-motion', 'false');
+  await expect(demonstration).toHaveAttribute('data-playing', 'true');
+  const initialFrame = Number(await demonstration.getAttribute('data-frame-index'));
+  assert.ok(Number.isInteger(initialFrame) && initialFrame >= 0);
+  const initialCaption = await demonstration.getByTestId('demo-caption').innerText();
+  await expect.poll(async () => Number(await demonstration.getAttribute('data-frame-index')))
+    .toBeGreaterThan(initialFrame);
+  await demonstration.getByRole('button', { name: 'Mettre la démonstration en pause', exact: true }).click();
+  await expect(demonstration).toHaveAttribute('data-playing', 'false');
+  const pausedFrame = Number(await demonstration.getAttribute('data-frame-index'));
+  const pausedCaption = await demonstration.getByTestId('demo-caption').innerText();
+  assert.notEqual(pausedCaption, initialCaption);
+  // The matching-pair frame lasts 2.4 s. Wait longer than a full frame to prove
+  // that Pause actually cancels progression, rather than just changing a label.
+  await page.waitForTimeout(3000);
+  await expect(demonstration).toHaveAttribute('data-frame-index', String(pausedFrame));
+  await expect(demonstration.getByTestId('demo-caption')).toHaveText(pausedCaption);
+  await demonstration.getByRole('button', { name: 'Étape suivante', exact: true }).click();
+  await expect(demonstration).toHaveAttribute('data-frame-index', String(pausedFrame + 1));
+  await expect(demonstration).toHaveAttribute('data-playing', 'false');
+  await expect(demonstration.getByTestId('demo-gesture')).toBeVisible();
+  const nextCaption = await demonstration.getByTestId('demo-caption').innerText();
+  assert.notEqual(nextCaption, pausedCaption);
+  assert.deepEqual(await store('profiles'), before.profiles);
+  assert.deepEqual(await store('runs'), before.runs);
+  assert.deepEqual(await store('attempts'), before.attempts);
+  const record = { gameId: '01', sceneKind: 'cards', initialFrame, pausedFrame,
+    steppedFrame: pausedFrame + 1, actualAutomaticProgressionVerified: true,
+    pauseDurationMs: 3000, pauseVerified: true, manualStepVerified: true,
+    gestureVisible: true, profilesUnchanged: true, runsUnchanged: true, attemptsUnchanged: true };
+  proof.demonstrations = [...(proof.demonstrations ?? []), record];
+  proof.animatedDemonstrationVerified = true;
+  proof.demoPauseVerified = true;
+  proof.demoDidNotCreateAttempts = true;
+}
+
 async function startPairs(expectedLevel) {
   await navigate('Explorer');
   await page.getByRole('textbox', { name: 'Rechercher une activité', exact: true }).fill('Cartes jumelles');
@@ -74,8 +119,10 @@ async function startPairs(expectedLevel) {
   await card.getByRole('button', { name: 'Découvrir l’activité', exact: false }).click();
   const journey = page.getByRole('list', { name: 'Étapes de l’activité', exact: true });
   await expect(journey.locator('[aria-current="step"]')).toContainText('Consigne');
+  const beforeDemo = { profiles: await store('profiles'), runs: await store('runs'), attempts: await store('attempts') };
   await page.getByRole('button', { name: 'Voir un exemple', exact: false }).click();
   await expect(journey.locator('[aria-current="step"]')).toContainText('Exemple');
+  await verifyDemonstration(beforeDemo);
   await page.getByRole('button', { name: 'Commencer l’activité', exact: false }).click();
   await expect(journey.locator('[aria-current="step"]')).toContainText('Jeu');
   await expect(page.locator('.memory-card').first()).toBeVisible();
@@ -132,17 +179,19 @@ try {
   assert.equal(meta.basePath, mount);
   assert.equal(meta.format, 'elan-publication');
   assert.equal(meta.version, 2);
-  assert.equal(meta.fileCount, 32);
-  assert.equal(meta.webFileCount, 30);
+  assert.ok(Number.isInteger(expectedWebFiles) && expectedWebFiles >= 8 && expectedWebFiles <= 128);
+  assert.equal(expectedFiles, expectedWebFiles + 2);
+  assert.equal(meta.fileCount, expectedFiles);
+  assert.equal(meta.webFileCount, expectedWebFiles);
   assert.equal(meta.files.length, meta.fileCount);
   assert.equal(new Set(meta.files.map(file => file.path)).size, meta.fileCount);
   for (const file of meta.files) {
-    assert.match(file.path, /^(?:assets\/[A-Za-z0-9_-]+\.(?:js|css|png|svg|webp|woff2)|(?:icon(?:-192|-512)?\.(?:svg|png))|index\.html|manifest\.webmanifest|sw\.js|workbox-[A-Za-z0-9_-]+\.js|pwa-resources-[A-Za-z0-9_-]+\.json|android-release\.json|downloads\/elan-android-v0\.2\.0\.apk)$/);
+    assert.match(file.path, /^(?:assets\/[A-Za-z0-9_-]+\.(?:js|css|png|svg|webp|woff2)|(?:icon(?:-192|-512)?\.(?:svg|png))|index\.html|manifest\.webmanifest|sw\.js|workbox-[A-Za-z0-9_-]+\.js|pwa-resources-[A-Za-z0-9_-]+\.json|android-release\.json|downloads\/elan-android-v0\.2\.1\.apk)$/);
     assert.ok(Number.isSafeInteger(file.bytes) && file.bytes > 0 && file.bytes <= (file.path === APK_PATH ? 50000000 : 10000000));
     assert.match(file.sha256, /^[a-f0-9]{64}$/);
   }
   assert.equal(digest(canonical({ basePath: meta.basePath, files: meta.files })), meta.buildSha256);
-  assert.equal(meta.androidRelease?.version, '0.2.0');
+  assert.equal(meta.androidRelease?.version, '0.2.1');
   assert.equal(meta.androidRelease?.minAndroid, 7);
   assert.equal(meta.androidRelease?.url, APK_PATH);
   assert.match(expectedBuild ?? '', /^[a-f0-9]{64}$/);
@@ -159,7 +208,7 @@ try {
   browser = await chromium.launch({ headless: true, executablePath: process.env.CHROMIUM_PATH || undefined });
   proof.browserVersion = browser.version();
   const context = await browser.newContext({
-    viewport: { width: 1366, height: 900 }, locale: 'fr-FR',
+    viewport: { width: 1366, height: 900 }, locale: 'fr-FR', reducedMotion: 'no-preference',
     acceptDownloads: true, serviceWorkers: 'allow',
   });
   page = await context.newPage();
@@ -223,7 +272,7 @@ try {
   await androidLink.click();
   const androidDownload = await androidDownloadWait;
   assert.equal(await androidDownload.failure(), null);
-  assert.equal(androidDownload.suggestedFilename(), 'elan-android-v0.2.0.apk');
+  assert.equal(androidDownload.suggestedFilename(), 'elan-android-v0.2.1.apk');
   const androidDownloadPath = await androidDownload.path(); assert.ok(androidDownloadPath);
   const downloadedApk = await readFile(androidDownloadPath);
   assert.equal(downloadedApk.length, apkFile.bytes); assert.equal(digest(downloadedApk), apkFile.sha256);

@@ -2,10 +2,26 @@ import { createHash } from 'node:crypto';
 import { readdir, readFile, lstat } from 'node:fs/promises';
 import { join } from 'node:path';
 
+// Retained for historical fixtures and consumers. New releases derive their
+// exact path from validated Android metadata, never from this legacy default.
 export const APK_PATH = 'downloads/elan-android-v0.2.0.apk';
 export const ANDROID_METADATA_PATH = 'android-release.json';
 export const MAX_APK_BYTES = 50_000_000;
 export const MAX_WEB_FILES = 128;
+export function isAndroidVersion(value) {
+  if (typeof value !== 'string' || value.length > 32) return false;
+  return /^(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)\.(?:0|[1-9]\d*)$/.exec(value)?.[0] === value;
+}
+export function androidReleasePath(version) {
+  if (!isAndroidVersion(version)) throw new Error('Version Android invalide.');
+  return `downloads/elan-android-v${version}.apk`;
+}
+export function androidVersionFromPath(path) {
+  if (typeof path !== 'string') return undefined;
+  const match = /^downloads\/elan-android-v(.+)\.apk$/.exec(path);
+  return match?.[0] === path && isAndroidVersion(match[1]) ? match[1] : undefined;
+}
+function isAndroidArtifact(path) { return path === ANDROID_METADATA_PATH || androidVersionFromPath(path) !== undefined; }
 export function canonical(value) {
   if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
   if (value && typeof value === 'object') return '{' + Object.keys(value).sort().map(key => JSON.stringify(key) + ':' + canonical(value[key])).join(',') + '}';
@@ -21,7 +37,8 @@ export function assertBase(value) {
   return value;
 }
 export function allowedArtifactPath(path) {
-  return ['index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'sw.js', ANDROID_METADATA_PATH, APK_PATH].includes(path)
+  return ['index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'sw.js', ANDROID_METADATA_PATH].includes(path)
+    || androidVersionFromPath(path) !== undefined
     || /^workbox-[A-Za-z0-9_-]+\.js$/.test(path)
     || /^pwa-resources-[A-Za-z0-9_-]+\.json$/.test(path)
     || /^assets\/[A-Za-z0-9_-]+\.(?:js|css|png|svg|webp|woff2)$/.test(path);
@@ -41,7 +58,7 @@ export function buildFingerprint(basePath, files) { return digest({ basePath, fi
 
 export function validateAndroidRelease(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) || Object.keys(value).some(key => !['name', 'version', 'minAndroid', 'bytes', 'sha256', 'url'].includes(key))
-    || value.version !== '0.2.0' || value.url !== APK_PATH || !Number.isInteger(value.minAndroid) || value.minAndroid < 1 || value.minAndroid > 100
+    || !isAndroidVersion(value.version) || value.url !== androidReleasePath(value.version) || !Number.isInteger(value.minAndroid) || value.minAndroid < 1 || value.minAndroid > 100
     || !Number.isSafeInteger(value.bytes) || value.bytes < 4 || value.bytes > MAX_APK_BYTES || !/^[a-f0-9]{64}$/.test(value.sha256 ?? '')
     || (value.name !== undefined && (typeof value.name !== 'string' || !value.name.trim() || value.name.length > 80))) throw new Error('Métadonnées Android invalides.');
   return value;
@@ -55,11 +72,13 @@ export function validateMetadata(meta) {
   if (!Array.isArray(meta.files) || meta.files.length < 10 || meta.files.length > MAX_WEB_FILES + 2 || meta.fileCount !== meta.files.length || meta.webFileCount !== meta.fileCount - 2) throw new Error('Le nombre gelé de fichiers web et Android est contradictoire.');
   const paths = meta.files.map(file => file.path);
   if (new Set(paths).size !== paths.length || [...paths].sort().join('\n') !== paths.join('\n')) throw new Error('Chemins du manifeste dupliqués ou non triés.');
-  for (const file of meta.files) if (!allowedArtifactPath(file.path) || !Number.isSafeInteger(file.bytes) || file.bytes < 1 || file.bytes > (file.path === APK_PATH ? MAX_APK_BYTES : 10_000_000) || !/^[a-f0-9]{64}$/.test(file.sha256)) throw new Error(`Ressource de publication invalide : ${file.path}.`);
-  for (const required of ['index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'sw.js', ANDROID_METADATA_PATH, APK_PATH]) if (!paths.includes(required)) throw new Error(`Ressource obligatoire absente : ${required}.`);
-  if (paths.filter(path => path.startsWith('pwa-resources-')).length !== 1 || paths.filter(path => path.startsWith('workbox-')).length !== 1) throw new Error('Un manifeste de cache et un runtime Workbox exacts sont requis.');
   validateAndroidRelease(meta.androidRelease);
-  const apk = meta.files.find(file => file.path === APK_PATH);
+  const apkPath = meta.androidRelease.url;
+  if (paths.filter(path => androidVersionFromPath(path) !== undefined).length !== 1) throw new Error('Un seul APK courant manifesté est requis.');
+  for (const file of meta.files) if (!allowedArtifactPath(file.path) || !Number.isSafeInteger(file.bytes) || file.bytes < 1 || file.bytes > (androidVersionFromPath(file.path) !== undefined ? MAX_APK_BYTES : 10_000_000) || !/^[a-f0-9]{64}$/.test(file.sha256)) throw new Error(`Ressource de publication invalide : ${file.path}.`);
+  for (const required of ['index.html', 'manifest.webmanifest', 'icon.svg', 'icon-192.png', 'icon-512.png', 'sw.js', ANDROID_METADATA_PATH, apkPath]) if (!paths.includes(required)) throw new Error(`Ressource obligatoire absente : ${required}.`);
+  if (paths.filter(path => path.startsWith('pwa-resources-')).length !== 1 || paths.filter(path => path.startsWith('workbox-')).length !== 1) throw new Error('Un manifeste de cache et un runtime Workbox exacts sont requis.');
+  const apk = meta.files.find(file => file.path === apkPath);
   if (apk.bytes !== meta.androidRelease.bytes || apk.sha256 !== meta.androidRelease.sha256) throw new Error('APK et métadonnées Android contradictoires.');
   if (buildFingerprint(meta.basePath, meta.files) !== meta.buildSha256) throw new Error('Empreinte globale de build contradictoire.');
   return meta;
@@ -67,9 +86,9 @@ export function validateMetadata(meta) {
 export async function inspectArtifact(directory, basePath = '/elan-app/', includeAndroid = false) {
   assertBase(basePath);
   const names = await listFiles(directory);
-  if (names.length < 8 || names.length > MAX_WEB_FILES + (includeAndroid ? 2 : 0) || names.some(path => !allowedArtifactPath(path) || (!includeAndroid && [APK_PATH, ANDROID_METADATA_PATH].includes(path)))) throw new Error('Le paquet contient un chemin, un nombre de fichiers ou une ressource Android non autorisés.');
+  if (names.length < 8 || names.length > MAX_WEB_FILES + (includeAndroid ? 2 : 0) || names.some(path => !allowedArtifactPath(path) || (!includeAndroid && isAndroidArtifact(path)))) throw new Error('Le paquet contient un chemin, un nombre de fichiers ou une ressource Android non autorisés.');
   const files = [];
-  for (const path of names) { const info = await lstat(join(directory, path)); if (info.size < 1 || info.size > (path === APK_PATH ? MAX_APK_BYTES : 10_000_000)) throw new Error('Ressource hors budget : ' + path); const bytes = await readFile(join(directory, path)); files.push({ path, bytes: bytes.length, sha256: digest(bytes) }); }
+  for (const path of names) { const info = await lstat(join(directory, path)); if (info.size < 1 || info.size > (androidVersionFromPath(path) !== undefined ? MAX_APK_BYTES : 10_000_000)) throw new Error('Ressource hors budget : ' + path); const bytes = await readFile(join(directory, path)); files.push({ path, bytes: bytes.length, sha256: digest(bytes) }); }
   const manifest = JSON.parse(await readFile(join(directory, 'manifest.webmanifest'), 'utf8'));
   if (manifest.start_url !== basePath || manifest.scope !== basePath || !manifest.icons?.length || manifest.icons.some(icon => !icon.src.startsWith(basePath))) throw new Error('Manifeste PWA construit pour un autre sous-chemin. Relancer le build avec ELAN_BASE_PATH=/elan-app/.');
   const index = await readFile(join(directory, 'index.html'), 'utf8');
@@ -81,7 +100,7 @@ export async function inspectArtifact(directory, basePath = '/elan-app/', includ
   const byPath = new Map(files.map(file => [file.path, file]));
   const seen = new Set(); let total = 0;
   for (const resource of cache.resources) {
-    if (typeof resource.url !== 'string' || !resource.url.startsWith(basePath) || [APK_PATH, ANDROID_METADATA_PATH].includes(resource.url.slice(basePath.length))) throw new Error('Une ressource PWA sort du sous-chemin autorisé.');
+    if (typeof resource.url !== 'string' || !resource.url.startsWith(basePath) || isAndroidArtifact(resource.url.slice(basePath.length))) throw new Error('Une ressource PWA sort du sous-chemin autorisé.');
     const path = resource.url.slice(basePath.length), file = byPath.get(path);
     if (!file || seen.has(path) || file.bytes !== resource.bytes || file.sha256 !== resource.sha256) throw new Error(`Empreinte ou taille PWA contradictoire : ${resource.url}.`);
     seen.add(path); total += file.bytes;
@@ -96,11 +115,13 @@ export async function inspectArtifact(directory, basePath = '/elan-app/', includ
   let androidRelease;
   if (includeAndroid) {
     androidRelease = validateAndroidRelease(JSON.parse(await readFile(join(directory, ANDROID_METADATA_PATH), 'utf8')));
-    const apk = files.find(file => file.path === APK_PATH);
+    const apkPath = androidRelease.url;
+    if (names.filter(path => androidVersionFromPath(path) !== undefined).length !== 1) throw new Error('Un seul APK courant manifesté est requis.');
+    const apk = files.find(file => file.path === apkPath);
     if (!apk || apk.bytes !== androidRelease.bytes || apk.sha256 !== androidRelease.sha256) throw new Error('Le fichier APK diffère des métadonnées Android.');
-    const bytes = await readFile(join(directory, APK_PATH));
+    const bytes = await readFile(join(directory, apkPath));
     if (!bytes.subarray(0, 4).equals(Buffer.from([0x50, 0x4b, 0x03, 0x04]))) throw new Error('Conteneur APK/ZIP invalide.');
-    if (sw.includes(APK_PATH) || sw.includes(ANDROID_METADATA_PATH)) throw new Error('Le téléchargement Android ne doit pas être précaché par le service worker.');
+    if (/downloads\/elan-android-v[0-9.]+\.apk/.test(sw) || sw.includes(ANDROID_METADATA_PATH)) throw new Error('Le téléchargement Android ne doit pas être précaché par le service worker.');
   }
   return { files, buildSha256: buildFingerprint(basePath, files), resourceManifest: cachePath, webFileCount: files.length - (includeAndroid ? 2 : 0), ...(androidRelease ? { androidRelease } : {}) };
 }
