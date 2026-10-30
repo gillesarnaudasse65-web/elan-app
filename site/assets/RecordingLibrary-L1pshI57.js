@@ -1,1 +1,0 @@
-import{t as e}from"./react-7VJPxFFw.js";import{t}from"./index-GHAeqk8V.js";var n=e();function r({profile:e}){return(0,n.jsx)(t,{profileId:e.id})}export{r as RecordingLibrary,r as default};
