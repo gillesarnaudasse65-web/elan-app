@@ -1,8 +1,8 @@
 {
   "format": "elan-public-browser-recipe",
-  "version": 1,
-  "scenario": "difficulty-levels-1-to-3",
-  "createdAt": "2026-10-28T13:32:27.306Z",
+  "version": 2,
+  "scenario": "redesign-android-and-difficulty-levels-1-to-3",
+  "createdAt": "2026-10-30T13:27:58.308Z",
   "passed": true,
   "repository": "gillesarnaudasse65-web/elan-app",
   "url": "https://gillesarnaudasse65-web.github.io/elan-app/",
@@ -10,16 +10,40 @@
   "deployedToPublicURL": true,
   "physicalDeviceTested": false,
   "execution": "automated-isolated-browser",
-  "sourceCommit": "d80692e8e7c9ebefff1e70a5d4cc4d2bbeb3e0b0",
-  "workflowRunId": "40697262820",
-  "expectedBuildSha256": "c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d",
-  "buildSha256": "c39dc0a6e3c250691f4b0a5f5a4022d1fe0b0c93df07ad1edae3efac2369999d",
+  "sourceCommit": "c77c0a0f898d77833446ebe4c0d9a172162f6698",
+  "workflowRunId": "41063400620",
+  "expectedBuildSha256": "e13db1535da4104b3712d40f79ef436b8d9e8e9873470856f39eb61990f3f50e",
+  "buildSha256": "e13db1535da4104b3712d40f79ef436b8d9e8e9873470856f39eb61990f3f50e",
+  "publicationVersion": 2,
+  "fileCount": 32,
+  "webFileCount": 30,
   "browserVersion": "156.0.8078.4",
   "manifest": {
     "start_url": "/elan-app/",
     "scope": "/elan-app/"
   },
-  "resourceManifest": "pwa-resources-mvs5elss.json",
+  "appIconDimensions": [
+    192,
+    512
+  ],
+  "resourceManifest": "pwa-resources-mvv007je.json",
+  "apkExcludedFromPwaResources": true,
+  "androidDownload": {
+    "verified": true,
+    "metadataVerified": true,
+    "browserDownloadVerified": true,
+    "url": "https://gillesarnaudasse65-web.github.io/elan-app/downloads/elan-android-v0.2.0.apk",
+    "status": 200,
+    "bytes": 3768240,
+    "sha256": "6b30a58088a19f32c17eb1b6496afbb705aa3c94edf7c916012dd63459eab092",
+    "version": "0.2.0",
+    "minAndroid": 7,
+    "physicalInstallationTested": false
+  },
+  "androidDownloadVerified": true,
+  "modernInterfaceVerified": true,
+  "dashboardWidgetsVerified": true,
+  "activityJourneyVerified": true,
   "playedActivities": [
     {
       "gameId": "01",
@@ -50,6 +74,7 @@
       "script": "https://gillesarnaudasse65-web.github.io/elan-app/sw.js"
     }
   ],
+  "apkExcludedFromPwaCache": true,
   "persistedProfiles": 1,
   "persistedAttempts": 2,
   "activity": "01",
@@ -65,5 +90,5 @@
   "resultVerified": true,
   "offlineReloadVerified": true,
   "pageErrors": [],
-  "completedAt": "2026-10-28T13:32:32.560Z"
+  "completedAt": "2026-10-30T13:28:06.824Z"
 }
