@@ -1,29 +1,29 @@
 {
   "format": "elan-publication-attestation",
   "version": 1,
-  "createdAt": "2026-10-31T00:53:37.941Z",
-  "sourceCommit": "981f35546053716c708d21371ffcce8f7c7cd731",
+  "createdAt": "2026-10-31T04:07:21.763Z",
+  "sourceCommit": "3a8996e4117936de15efa2e339246d68ec180e06",
   "sourceCommitMeaning": "Commit exact de la branche de publication exécuté par GitHub Actions ; les sources applicatives locales sont identifiées séparément par sourceTreeSha256.",
   "repository": "gillesarnaudasse65-web/elan-app",
   "sourceRepository": "gillesarnaudasse65-web/Elan",
   "repositoryBaseCommit": "8d38021c22bebf3d4836e04389e22ce102c949d1",
   "repositoryBaseCommitMeaning": "Commit de départ du dépôt source privé gillesarnaudasse65-web/Elan ; il ne représente pas un commit de la cible publique gillesarnaudasse65-web/elan-app.",
   "sourceWorkingTreeUncommitted": true,
-  "sourceTreeSha256": "876d207c2a3a24742e09979d5ef5cca7fe38534c279ce29999aa1222bbd7ff8f",
-  "buildSha256": "0cd2e27730ba4ce22b96c2767af4d6af0f69ad133df3f6d5871f8eb1f483238d",
-  "fileCount": 37,
-  "webFileCount": 35,
+  "sourceTreeSha256": "abd912188d04396e2b5a8ff4e314d6c9bd5e591b2d8e1c2eb623facc9fb504a4",
+  "buildSha256": "abb10f560c00956225c87eaa756cbcfaf1e0158ac36e31e12ca44fcf318d1eae",
+  "fileCount": 41,
+  "webFileCount": 39,
   "basePath": "/elan-app/",
   "androidRelease": {
     "name": "Élan Android",
-    "version": "0.2.2",
+    "version": "0.2.3",
     "minAndroid": 7,
-    "bytes": 3867247,
-    "sha256": "2675a6374d3a976f9ee6dd9479cbaac71b7f85ebd7fc2b2ebb27c237aab48cf9",
-    "url": "downloads/elan-android-v0.2.2.apk"
+    "bytes": 3875877,
+    "sha256": "3e74c48840d7e65baf1c4876c40cbbace4d75641146f527b5d72cfca9a6815cd",
+    "url": "downloads/elan-android-v0.2.3.apk"
   },
   "androidDownloadVerified": true,
-  "verifiedAndroidURL": "https://gillesarnaudasse65-web.github.io/elan-app/downloads/elan-android-v0.2.2.apk",
+  "verifiedAndroidURL": "https://gillesarnaudasse65-web.github.io/elan-app/downloads/elan-android-v0.2.3.apk",
   "configOutcome": "success",
   "deployOutcome": "success",
   "deployJobOutcome": "success",
@@ -37,7 +37,7 @@
       "attempts": 1,
       "status": 200,
       "bytes": 1222,
-      "sha256": "4055ce89d62be3488609cb2bf1eca339b25d5ab5668d0c167728d47470f5ae43"
+      "sha256": "9bd8a4d186276337527dd03bbe7bab653ae348503fd4fb9d4c9a257281ea5636"
     },
     {
       "path": "android-release.json",
@@ -45,15 +45,7 @@
       "attempts": 1,
       "status": 200,
       "bytes": 217,
-      "sha256": "b3445037bc33f05c84d0e4a1d49802df36496548af01c61f4000ebf297ad93d6"
-    },
-    {
-      "path": "assets/AccountPanel-BIYXcmTG.js",
-      "passed": true,
-      "attempts": 1,
-      "status": 200,
-      "bytes": 13332,
-      "sha256": "e2e90f8c7f3ef79702fcf5af2afc4ebc687e05e045661e98036d02605d287daa"
+      "sha256": "246f9cb514cbc26e0ae69258c8190f5985526a291d16f9c69bdc1f592813766d"
     },
     {
       "path": "assets/AccountPanel-FHPGbp31.css",
@@ -64,12 +56,12 @@
       "sha256": "d89c46566f85d05f35a628987a55f25de0fcc75e6cd82b608d67b47ac8e72bb3"
     },
     {
-      "path": "assets/GameDemonstration-BmxFlPTE.js",
+      "path": "assets/AccountPanel-aeCyucsD.js",
       "passed": true,
       "attempts": 1,
       "status": 200,
-      "bytes": 47418,
-      "sha256": "f060bbb6462504ab608c93d464a7c34d1d39190aa4ac461eae228c573b9d46f4"
+      "bytes": 13255,
+      "sha256": "d2b74c55809bcb6a70055362e74697bff40f3df5ef413e00a8ebe6b7b9077bd2"
     },
     {
       "path": "assets/GameDemonstration-CkOILdxn.css",
@@ -80,20 +72,52 @@
       "sha256": "23e91b9ec1d1df9d7584300e80ee83158f7f9c44332b6b86ba9dfb2c13738bc3"
     },
     {
-      "path": "assets/MediaPacks-Cg0o_o6g.js",
+      "path": "assets/GameDemonstration-iC3Z57PC.js",
       "passed": true,
       "attempts": 1,
       "status": 200,
-      "bytes": 18414,
-      "sha256": "797293b0ff865bccadd7d9584ea1c14e486fd2e7298423fb0bcd8ae7f749146a"
+      "bytes": 47399,
+      "sha256": "de5f76a41b7242dba237d8c53492f2e72bd9d99caea7fb0c8a070793a38ccbe5"
     },
     {
-      "path": "assets/RecordingLibrary-iEZBIQYO.js",
+      "path": "assets/MediaPacks-c7qNaSex.js",
+      "passed": true,
+      "attempts": 1,
+      "status": 200,
+      "bytes": 18409,
+      "sha256": "7ab74ba20d12adc7375b9ec74ddef6191182a840eed244259c69aae08b500669"
+    },
+    {
+      "path": "assets/ProfileEditor-C6Oclc39.js",
+      "passed": true,
+      "attempts": 1,
+      "status": 200,
+      "bytes": 12047,
+      "sha256": "3b0cf5f8fb90d73baa469aebb8e94167ada6403e839bdc55c1a42fe9f8cb5a24"
+    },
+    {
+      "path": "assets/ProfileEditor-CwVU__wE.css",
+      "passed": true,
+      "attempts": 1,
+      "status": 200,
+      "bytes": 2892,
+      "sha256": "ff356102b13d4bd36764002e9fb4bbd866f89ca41f1efa96ddb797acded678d3"
+    },
+    {
+      "path": "assets/RecordingLibrary-qEw1fGWu.js",
       "passed": true,
       "attempts": 1,
       "status": 200,
       "bytes": 193,
-      "sha256": "7bca5675ef8d90eccb448f7581ba5cbdf4688a171615cebb7195f29382c9046c"
+      "sha256": "6ea9cedf15cbb65a7086ffb10a46569935ad93b2d1317057c05d4db35d432449"
+    },
+    {
+      "path": "assets/check-NO379dkz.js",
+      "passed": true,
+      "attempts": 1,
+      "status": 200,
+      "bytes": 120,
+      "sha256": "8629c226c8bc532765024cce12bf4514b32c6f6e8874727e28f8a78e22558483"
     },
     {
       "path": "assets/delayed-memory-CAeoXEBn.js",
@@ -168,20 +192,20 @@
       "sha256": "ee83c47ea35cc8a5904720197861607c1ce525d3bcf986d0966013864f14da5d"
     },
     {
-      "path": "assets/index-BzMPJ_zO.css",
+      "path": "assets/index-CIaMhaKC.css",
       "passed": true,
       "attempts": 1,
       "status": 200,
-      "bytes": 88811,
-      "sha256": "821abb217e4adbd3961089e248e4696463c231574cd6efd533d764e60bc84995"
+      "bytes": 90042,
+      "sha256": "5814a68d0a78c431bd37349b42fb894e791eca2bb81e0c862dc487065796f6f7"
     },
     {
-      "path": "assets/index-CHoaihZW.js",
+      "path": "assets/index-DFqFo0bU.js",
       "passed": true,
       "attempts": 1,
       "status": 200,
-      "bytes": 465609,
-      "sha256": "fa1f625b9bee312d1ed33d94e249b4f53cdaabcabc57ec2485ceb16999ce284d"
+      "bytes": 471396,
+      "sha256": "6f3872e33aee67e0a11b17ad483923f161b143b8a02a93b033da3a15d14580ec"
     },
     {
       "path": "assets/learning-ui-CuwhcC2L.js",
@@ -248,6 +272,14 @@
       "sha256": "18ce7aaa60ee7c074684577fee36e00f79e3fb9345ddaf03212a319951f8289e"
     },
     {
+      "path": "assets/user-round-mhLo0ULu.js",
+      "passed": true,
+      "attempts": 1,
+      "status": 200,
+      "bytes": 178,
+      "sha256": "5bd41c8d4fad47a6ee406bbbd37872c81224f3f19e8a9945f4301ed95ab90a98"
+    },
+    {
       "path": "assets/v1-attention-BPtnXW-C.js",
       "passed": true,
       "attempts": 1,
@@ -264,12 +296,12 @@
       "sha256": "6d2be02e1b3e7dbd38d387b9feb6e3567d5dc546bd0229e10b48a9930fca6f7e"
     },
     {
-      "path": "downloads/elan-android-v0.2.2.apk",
+      "path": "downloads/elan-android-v0.2.3.apk",
       "passed": true,
       "attempts": 1,
       "status": 200,
-      "bytes": 3867247,
-      "sha256": "2675a6374d3a976f9ee6dd9479cbaac71b7f85ebd7fc2b2ebb27c237aab48cf9"
+      "bytes": 3875877,
+      "sha256": "3e74c48840d7e65baf1c4876c40cbbace4d75641146f527b5d72cfca9a6815cd"
     },
     {
       "path": "icon-192.png",
@@ -301,7 +333,7 @@
       "attempts": 1,
       "status": 200,
       "bytes": 1222,
-      "sha256": "4055ce89d62be3488609cb2bf1eca339b25d5ab5668d0c167728d47470f5ae43"
+      "sha256": "9bd8a4d186276337527dd03bbe7bab653ae348503fd4fb9d4c9a257281ea5636"
     },
     {
       "path": "manifest.webmanifest",
@@ -312,20 +344,20 @@
       "sha256": "51268bb401f01aea16c85715cac1fad59c14417e54dc3eec77358bbb44004c69"
     },
     {
-      "path": "pwa-resources-mvvokf5g.json",
+      "path": "pwa-resources-mvvvhq2a.json",
       "passed": true,
       "attempts": 1,
       "status": 200,
-      "bytes": 5030,
-      "sha256": "22f0796a7769750e815b2f22318c458c07e76f89729f7a0bb41cb3d19406682a"
+      "bytes": 5651,
+      "sha256": "ad831e178f4c1aac7f66607a9c4e75c7fd1d47218bf7a246c68dacac0790e6f6"
     },
     {
       "path": "sw.js",
       "passed": true,
       "attempts": 1,
       "status": 200,
-      "bytes": 2817,
-      "sha256": "7a9a503fb45b3a6eb94aa0ab355a4e4e3926a47b7a44747d0555b0d86058de1b"
+      "bytes": 3027,
+      "sha256": "04bd662630ca245f75a846354eb0a8960c5eff8e481ccec63f1a16583164496a"
     },
     {
       "path": "workbox-5f44db27.js",
@@ -337,5 +369,5 @@
     }
   ],
   "errors": [],
-  "workflowRunId": "41152569148"
+  "workflowRunId": "41167205870"
 }
