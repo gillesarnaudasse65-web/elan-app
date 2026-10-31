@@ -15,8 +15,8 @@ const origin = new URL(baseURL).origin;
 const packageRoot = resolve(process.env.ELAN_SMOKE_PACKAGE_ROOT ?? '.');
 const outputDir = resolve(process.env.ELAN_SMOKE_OUTPUT_DIR ?? 'public-browser-evidence');
 const digest = data => createHash('sha256').update(data).digest('hex');
-const nickname = 'Recette Élan exemples animés';
-const APK_PATH = 'downloads/elan-android-v0.2.1.apk';
+const nickname = 'Recette Élan jeux interactifs';
+const APK_PATH = 'downloads/elan-android-v0.2.2.apk';
 const ANDROID_METADATA_PATH = 'android-release.json';
 // These values are frozen in the workflow only after the final package exists.
 // A pending value must fail before a browser or public download is opened.
@@ -36,7 +36,7 @@ async function checkDashboard(activityCount, domains) {
 }
 const expectedBuild = process.env.ELAN_EXPECTED_BUILD_SHA256;
 const proof = {
-  format: 'elan-public-browser-recipe', version: 3, scenario: 'animated-example-android-0.2.1-and-difficulty-levels-1-to-3',
+  format: 'elan-public-browser-recipe', version: 4, scenario: 'live-gameplay-android-0.2.2-and-difficulty-levels-1-to-3',
   createdAt: new Date().toISOString(), passed: false,
   repository: process.env.GITHUB_REPOSITORY ?? 'gillesarnaudasse65-web/elan-app',
   url: baseURL, checkedURL: baseURL, deployedToPublicURL: !local,
@@ -88,9 +88,9 @@ async function verifyDemonstration(before) {
   const pausedFrame = Number(await demonstration.getAttribute('data-frame-index'));
   const pausedCaption = await demonstration.getByTestId('demo-caption').innerText();
   assert.notEqual(pausedCaption, initialCaption);
-  // The matching-pair frame lasts 2.4 s. Wait longer than a full frame to prove
-  // that Pause actually cancels progression, rather than just changing a label.
-  await page.waitForTimeout(3000);
+  // Wait longer than the authored 3.4 s frame so a stale timer would visibly
+  // advance. The local deterministic suite separately covers larger jumps.
+  await page.waitForTimeout(4000);
   await expect(demonstration).toHaveAttribute('data-frame-index', String(pausedFrame));
   await expect(demonstration.getByTestId('demo-caption')).toHaveText(pausedCaption);
   await demonstration.getByRole('button', { name: 'Étape suivante', exact: true }).click();
@@ -104,7 +104,7 @@ async function verifyDemonstration(before) {
   assert.deepEqual(await store('attempts'), before.attempts);
   const record = { gameId: '01', sceneKind: 'cards', initialFrame, pausedFrame,
     steppedFrame: pausedFrame + 1, actualAutomaticProgressionVerified: true,
-    pauseDurationMs: 3000, pauseVerified: true, manualStepVerified: true,
+    pauseDurationMs: 4000, pauseVerified: true, manualStepVerified: true,
     gestureVisible: true, profilesUnchanged: true, runsUnchanged: true, attemptsUnchanged: true };
   proof.demonstrations = [...(proof.demonstrations ?? []), record];
   proof.animatedDemonstrationVerified = true;
@@ -126,6 +126,24 @@ async function startPairs(expectedLevel) {
   await page.getByRole('button', { name: 'Commencer l’activité', exact: false }).click();
   await expect(journey.locator('[aria-current="step"]')).toContainText('Jeu');
   await expect(page.locator('.memory-card').first()).toBeVisible();
+  const surface = page.locator('.play-surface');
+  await expect(surface).toBeVisible();
+  await expect(surface.locator('[data-artwork-game="01"]')).toBeVisible();
+  const cardButtons = surface.locator('.memory-card');
+  const coveredNames = await cardButtons.evaluateAll(cards => cards.map(card => ({
+    name: card.getAttribute('aria-label'), state: card.getAttribute('data-card-state'),
+    frontHidden: card.querySelector('.pair-card-front')?.getAttribute('aria-hidden'),
+    backHidden: card.querySelector('.pair-card-back')?.getAttribute('aria-hidden'),
+  })));
+  assert.ok(coveredNames.length > 0);
+  for (const card of coveredNames) {
+    assert.match(card.name ?? '', /^Retourner la carte \d+$/);
+    assert.equal(card.state, 'covered');
+    assert.equal(card.frontHidden, 'true');
+    assert.equal(card.backHidden, 'true');
+  }
+  proof.coveredCardsAccessible = true;
+  proof.gameArtworkVerified = true;
   const runs = await store('runs');
   assert.equal(runs.length, 1);
   assert.equal(runs[0].gameId, '01');
@@ -137,6 +155,11 @@ async function startPairs(expectedLevel) {
 }
 
 async function finishPairs(run, cardCount, profileId) {
+  const progress = page.locator('.pair-progress-track');
+  await expect(progress).toHaveAttribute('role', 'progressbar');
+  await expect(progress).toHaveAttribute('aria-valuenow', '0');
+  await expect(progress).toHaveAttribute('aria-valuemax', String(cardCount / 2));
+  await expect(progress.locator('.pair-progress-segment.is-complete')).toHaveCount(0);
   await page.getByRole('button', { name: 'Aide : observer toutes les cartes', exact: true }).click();
   const labels = await page.locator('.memory-card').evaluateAll(cards => cards.map(card => card.getAttribute('aria-label') ?? ''));
   assert.equal(labels.length, cardCount);
@@ -148,8 +171,58 @@ async function finishPairs(run, cardCount, profileId) {
   });
   assert.equal(groups.size, cardCount / 2);
   for (const indices of groups.values()) assert.equal(indices.length, 2);
+  // Looking at the help must reveal the faces without awarding any pair.
+  await expect(progress).toHaveAttribute('aria-valuenow', '0');
   await page.getByRole('button', { name: 'Masquer les cartes', exact: true }).click();
-  for (const indices of groups.values()) for (const index of indices) await page.locator('.memory-card').nth(index).click();
+  const firstCard = page.locator('.memory-card').first();
+  await expect(firstCard).toHaveAttribute('data-card-state', 'covered');
+  await expect.poll(async () => firstCard.locator('.pair-card-flipper').evaluate(element => {
+    const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform);
+    return Math.abs(matrix.m11 - 1) < .001 && Math.abs(matrix.m33 - 1) < .001;
+  })).toBe(true);
+  const closedFlip = await firstCard.locator('.pair-card-flipper').evaluate(element => ({
+    transform: getComputedStyle(element).transform,
+    transition: getComputedStyle(element).transitionDuration,
+    transformStyle: getComputedStyle(element).transformStyle,
+  }));
+  assert.equal(closedFlip.transformStyle, 'preserve-3d');
+  assert.ok(closedFlip.transition.split(',').some(value => Number.parseFloat(value) > 0));
+  let completedPairs = 0;
+  let liveFlip;
+  for (const indices of groups.values()) {
+    await page.locator('.memory-card').nth(indices[0]).click();
+    if (completedPairs === 0) {
+      await expect(firstCard).toHaveAttribute('data-card-state', 'revealed');
+      await expect(progress).toHaveAttribute('aria-valuenow', '0');
+      await expect(progress.locator('.pair-progress-segment.is-complete')).toHaveCount(0);
+      await expect.poll(async () => firstCard.locator('.pair-card-flipper').evaluate(element => {
+        const matrix = new DOMMatrixReadOnly(getComputedStyle(element).transform);
+        return Math.abs(matrix.m11 + 1) < .001 && Math.abs(matrix.m33 + 1) < .001;
+      })).toBe(true);
+      liveFlip = await firstCard.locator('.pair-card-flipper').evaluate(element => ({
+        transform: getComputedStyle(element).transform,
+        transition: getComputedStyle(element).transitionDuration,
+      }));
+      assert.notEqual(liveFlip.transform, closedFlip.transform);
+    }
+    await page.locator('.memory-card').nth(indices[1]).click();
+    completedPairs++;
+    await expect(progress).toHaveAttribute('aria-valuenow', String(completedPairs));
+    await expect(progress.locator('.pair-progress-segment.is-complete')).toHaveCount(completedPairs);
+    for (const index of indices) await expect(page.locator('.memory-card').nth(index)).toHaveAttribute('data-card-state', 'matched');
+  }
+  assert.equal(completedPairs, cardCount / 2);
+  assert.ok(liveFlip);
+  proof.liveGameplay = [...(proof.liveGameplay ?? []), {
+    gameId: '01', runLevel: run.level, cardCount, surfaceVisible: true,
+    closedTransform: closedFlip.transform, revealedTransform: liveFlip.transform,
+    transitionDuration: liveFlip.transition, preserve3dVerified: true,
+    coveredCardsAccessible: true, partialRevealAwardedNoPair: true,
+    helpAwardedNoPair: true, progressMatchesActualPairs: completedPairs,
+  }];
+  proof.liveGameplayVerified = true;
+  proof.cardFlipVerified = true;
+  proof.pairProgressVerified = true;
   await page.getByRole('button', { name: 'Voir mon résultat', exact: true }).click();
   await expect(page.getByRole('heading', { name: 'Comprendre vos réponses', exact: true })).toBeVisible();
   await expect(page.getByRole('list', { name: 'Étapes de l’activité', exact: true }).locator('[aria-current="step"]')).toContainText('Bilan');
@@ -186,12 +259,12 @@ try {
   assert.equal(meta.files.length, meta.fileCount);
   assert.equal(new Set(meta.files.map(file => file.path)).size, meta.fileCount);
   for (const file of meta.files) {
-    assert.match(file.path, /^(?:assets\/[A-Za-z0-9_-]+\.(?:js|css|png|svg|webp|woff2)|(?:icon(?:-192|-512)?\.(?:svg|png))|index\.html|manifest\.webmanifest|sw\.js|workbox-[A-Za-z0-9_-]+\.js|pwa-resources-[A-Za-z0-9_-]+\.json|android-release\.json|downloads\/elan-android-v0\.2\.1\.apk)$/);
+    assert.match(file.path, /^(?:assets\/[A-Za-z0-9_-]+\.(?:js|css|png|svg|webp|woff2)|(?:icon(?:-192|-512)?\.(?:svg|png))|index\.html|manifest\.webmanifest|sw\.js|workbox-[A-Za-z0-9_-]+\.js|pwa-resources-[A-Za-z0-9_-]+\.json|android-release\.json|downloads\/elan-android-v0\.2\.2\.apk)$/);
     assert.ok(Number.isSafeInteger(file.bytes) && file.bytes > 0 && file.bytes <= (file.path === APK_PATH ? 50000000 : 10000000));
     assert.match(file.sha256, /^[a-f0-9]{64}$/);
   }
   assert.equal(digest(canonical({ basePath: meta.basePath, files: meta.files })), meta.buildSha256);
-  assert.equal(meta.androidRelease?.version, '0.2.1');
+  assert.equal(meta.androidRelease?.version, '0.2.2');
   assert.equal(meta.androidRelease?.minAndroid, 7);
   assert.equal(meta.androidRelease?.url, APK_PATH);
   assert.match(expectedBuild ?? '', /^[a-f0-9]{64}$/);
@@ -272,7 +345,7 @@ try {
   await androidLink.click();
   const androidDownload = await androidDownloadWait;
   assert.equal(await androidDownload.failure(), null);
-  assert.equal(androidDownload.suggestedFilename(), 'elan-android-v0.2.1.apk');
+  assert.equal(androidDownload.suggestedFilename(), 'elan-android-v0.2.2.apk');
   const androidDownloadPath = await androidDownload.path(); assert.ok(androidDownloadPath);
   const downloadedApk = await readFile(androidDownloadPath);
   assert.equal(downloadedApk.length, apkFile.bytes); assert.equal(digest(downloadedApk), apkFile.sha256);
