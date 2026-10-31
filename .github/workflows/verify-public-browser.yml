@@ -34,9 +34,9 @@ jobs:
         env:
           ELAN_SMOKE_OUTPUT_DIR: ${{ github.workspace }}
           ELAN_SMOKE_PACKAGE_ROOT: ${{ github.workspace }}
-          ELAN_EXPECTED_BUILD_SHA256: 0cd2e27730ba4ce22b96c2767af4d6af0f69ad133df3f6d5871f8eb1f483238d
-          ELAN_EXPECTED_WEB_FILE_COUNT: 35
-          ELAN_EXPECTED_FILE_COUNT: 37
+          ELAN_EXPECTED_BUILD_SHA256: abb10f560c00956225c87eaa756cbcfaf1e0158ac36e31e12ca44fcf318d1eae
+          ELAN_EXPECTED_WEB_FILE_COUNT: 39
+          ELAN_EXPECTED_FILE_COUNT: 41
         run: node "$RUNNER_TEMP/elan-browser-deps/public-browser-smoke.mjs"
       - name: Conserver aussi un échec d’installation ou d’exécution
         if: always()
@@ -49,13 +49,13 @@ jobs:
           try { await access('browser-status.json'); }
           catch {
             await writeFile('browser-status.json', JSON.stringify({
-              format: 'elan-public-browser-recipe', version: 4,
-              scenario: 'live-gameplay-android-0.2.2-and-difficulty-levels-1-to-3',
+              format: 'elan-public-browser-recipe', version: 5,
+              scenario: 'profile-edit-learning-level-android-0.2.3-and-live-gameplay',
               createdAt: new Date().toISOString(), passed: false,
               repository: process.env.GITHUB_REPOSITORY,
               sourceCommit: process.env.GITHUB_SHA,
               workflowRunId: process.env.GITHUB_RUN_ID,
-              buildSha256: '0cd2e27730ba4ce22b96c2767af4d6af0f69ad133df3f6d5871f8eb1f483238d',
+              buildSha256: 'abb10f560c00956225c87eaa756cbcfaf1e0158ac36e31e12ca44fcf318d1eae',
               url: 'https://gillesarnaudasse65-web.github.io/elan-app/',
               deployedToPublicURL: false, physicalDeviceTested: false,
               error: 'Aucun rapport navigateur produit ; installation=' + process.env.TOOLS_OUTCOME + ', recette=' + process.env.RECIPE_OUTCOME
@@ -67,4 +67,4 @@ jobs:
         run: node scripts/publication/persist-browser-status.mjs
       - name: Exiger la réussite de la vraie recette publique
         if: always()
-        run: node --input-type=module -e "import {readFile} from 'node:fs/promises'; const report=JSON.parse(await readFile('browser-status.json','utf8')); if(report.passed!==true || report.deployedToPublicURL!==true || report.androidDownloadVerified!==true || report.modernInterfaceVerified!==true || report.dashboardWidgetsVerified!==true || report.activityJourneyVerified!==true || report.apkExcludedFromPwaCache!==true || report.animatedDemonstrationVerified!==true || report.demoPauseVerified!==true || report.demoDidNotCreateAttempts!==true || report.liveGameplayVerified!==true || report.cardFlipVerified!==true || report.pairProgressVerified!==true || report.coveredCardsAccessible!==true || report.gameArtworkVerified!==true) process.exit(1);"
+        run: node --input-type=module -e "import {readFile} from 'node:fs/promises'; const report=JSON.parse(await readFile('browser-status.json','utf8')); if(report.passed!==true || report.deployedToPublicURL!==true || report.androidDownloadVerified!==true || report.modernInterfaceVerified!==true || report.dashboardWidgetsVerified!==true || report.activityJourneyVerified!==true || report.apkExcludedFromPwaCache!==true || report.animatedDemonstrationVerified!==true || report.demoPauseVerified!==true || report.demoDidNotCreateAttempts!==true || report.liveGameplayVerified!==true || report.cardFlipVerified!==true || report.pairProgressVerified!==true || report.coveredCardsAccessible!==true || report.gameArtworkVerified!==true || report.learningLevelChangeVerified!==true || report.profileEditVerified!==true || report.profileIdentityPreserved!==true || report.pendingRunPreserved!==true || report.profileEditReloadVerified!==true || report.resumeAfterProfileEditVerified!==true || report.editedProfileExportVerified!==true) process.exit(1);"

@@ -15,8 +15,9 @@ const origin = new URL(baseURL).origin;
 const packageRoot = resolve(process.env.ELAN_SMOKE_PACKAGE_ROOT ?? '.');
 const outputDir = resolve(process.env.ELAN_SMOKE_OUTPUT_DIR ?? 'public-browser-evidence');
 const digest = data => createHash('sha256').update(data).digest('hex');
-const nickname = 'Recette Élan jeux interactifs';
-const APK_PATH = 'downloads/elan-android-v0.2.2.apk';
+const nickname = 'Recette Élan profil initial';
+const editedNickname = 'Recette Élan profil modifié';
+const APK_PATH = 'downloads/elan-android-v0.2.3.apk';
 const ANDROID_METADATA_PATH = 'android-release.json';
 // These values are frozen in the workflow only after the final package exists.
 // A pending value must fail before a browser or public download is opened.
@@ -36,7 +37,7 @@ async function checkDashboard(activityCount, domains) {
 }
 const expectedBuild = process.env.ELAN_EXPECTED_BUILD_SHA256;
 const proof = {
-  format: 'elan-public-browser-recipe', version: 4, scenario: 'live-gameplay-android-0.2.2-and-difficulty-levels-1-to-3',
+  format: 'elan-public-browser-recipe', version: 5, scenario: 'profile-edit-learning-level-android-0.2.3-and-live-gameplay',
   createdAt: new Date().toISOString(), passed: false,
   repository: process.env.GITHUB_REPOSITORY ?? 'gillesarnaudasse65-web/elan-app',
   url: baseURL, checkedURL: baseURL, deployedToPublicURL: !local,
@@ -244,6 +245,75 @@ async function finishPairs(run, cardCount, profileId) {
   return attempt;
 }
 
+
+async function editProfileWithPendingRun(originalProfile, firstAttempts, pending, cardCount) {
+  // The pending game really exists before either edit; a comparison of empty
+  // arrays would not prove preservation of a resumable game.
+  const beforeRuns = await store('runs');
+  assert.deepEqual(beforeRuns, [pending]);
+  assert.deepEqual(await store('attempts'), firstAttempts);
+  await navigate('Explorer');
+  const learningLevel = page.getByRole('combobox', { name: 'Niveau d’apprentissage', exact: true });
+  await expect(learningLevel).toBeEnabled();
+  await learningLevel.selectOption('CP2');
+  const afterLevel = { ...originalProfile, difficulty: 3, level: 'CP2' };
+  await expect.poll(async () => store('profiles')).toEqual([afterLevel]);
+  await expect(learningLevel).toHaveValue('CP2');
+  await expect(page.getByRole('combobox', { name: 'Difficulté pour jouer', exact: true })).toHaveValue('3');
+  assert.deepEqual(await store('attempts'), firstAttempts);
+  assert.deepEqual(await store('runs'), beforeRuns);
+  proof.learningLevelChangeVerified = true;
+
+  await page.getByRole('button', { name: 'Modifier mon profil', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Modifier le profil', exact: true })).toBeVisible();
+  await page.getByRole('textbox', { name: 'Pseudonyme', exact: true }).fill(editedNickname);
+  await page.getByRole('button', { name: 'Enregistrer les modifications', exact: true }).click();
+  await expect(page.getByRole('heading', { name: 'Modifier le profil', exact: true })).not.toBeVisible();
+  await expect(page.locator('.profile-button')).toContainText(editedNickname);
+  const expectedProfiles = [{ ...afterLevel, nickname: editedNickname }];
+  assert.deepEqual(await store('profiles'), expectedProfiles);
+  assert.deepEqual(await store('attempts'), firstAttempts);
+  assert.deepEqual(await store('runs'), beforeRuns);
+  proof.profileEditVerified = true;
+  proof.profileIdentityPreserved = true;
+  proof.pendingRunPreserved = true;
+
+  await page.reload();
+  await expect(page.locator('.profile-button')).toContainText(editedNickname);
+  await navigate('Explorer');
+  await expect(page.getByRole('combobox', { name: 'Niveau d’apprentissage', exact: true })).toHaveValue('CP2');
+  await expect(page.getByRole('combobox', { name: 'Difficulté pour jouer', exact: true })).toHaveValue('3');
+  assert.deepEqual(await store('profiles'), expectedProfiles);
+  assert.deepEqual(await store('attempts'), firstAttempts);
+  assert.deepEqual(await store('runs'), beforeRuns);
+  proof.profileEditReloadVerified = true;
+
+  await navigate('Aujourd’hui');
+  const resume = page.locator('.resume-card');
+  await expect(resume).toHaveCount(1);
+  await resume.getByRole('button', { name: 'Reprendre', exact: false }).click();
+  await expect(page.getByRole('heading', { name: 'Cartes jumelles', exact: true, level: 1 })).toBeVisible();
+  await page.getByRole('button', { name: 'Voir un exemple', exact: false }).click();
+  await expect(page.getByTestId('game-demonstration')).toBeVisible();
+  await page.getByRole('button', { name: 'Commencer l’activité', exact: false }).click();
+  await expect(page.locator('.memory-card')).toHaveCount(cardCount);
+  await expect(page.locator('.session-header .pill')).toContainText('Niveau 3');
+  assert.deepEqual(await store('runs'), beforeRuns);
+  assert.deepEqual(await store('attempts'), firstAttempts);
+  proof.resumeAfterProfileEditVerified = true;
+  proof.profileEdit = {
+    profileId: originalProfile.id, createdAt: originalProfile.createdAt,
+    previousNickname: originalProfile.nickname, nickname: editedNickname,
+    previousLearningLevel: originalProfile.level, learningLevel: 'CP2', difficulty: 3,
+    roleUnchanged: true, audienceUnchanged: true, preferencesUnchanged: true,
+    pendingRunId: pending.id, pendingRunSeed: pending.seed,
+    pendingGameVersion: pending.gameVersion, pendingLevel: pending.level,
+    firstAttemptsUnchanged: true, pendingRunUnchangedBeforeAndAfterReload: true,
+    sameRunResumedThroughUI: true,
+  };
+  return expectedProfiles;
+}
+
 try {
   const meta = JSON.parse(await readFile(resolve(packageRoot, 'publication-meta.json'), 'utf8'));
   assert.equal(meta.repository, 'gillesarnaudasse65-web/elan-app');
@@ -259,12 +329,12 @@ try {
   assert.equal(meta.files.length, meta.fileCount);
   assert.equal(new Set(meta.files.map(file => file.path)).size, meta.fileCount);
   for (const file of meta.files) {
-    assert.match(file.path, /^(?:assets\/[A-Za-z0-9_-]+\.(?:js|css|png|svg|webp|woff2)|(?:icon(?:-192|-512)?\.(?:svg|png))|index\.html|manifest\.webmanifest|sw\.js|workbox-[A-Za-z0-9_-]+\.js|pwa-resources-[A-Za-z0-9_-]+\.json|android-release\.json|downloads\/elan-android-v0\.2\.2\.apk)$/);
+    assert.match(file.path, /^(?:assets\/[A-Za-z0-9_-]+\.(?:js|css|png|svg|webp|woff2)|(?:icon(?:-192|-512)?\.(?:svg|png))|index\.html|manifest\.webmanifest|sw\.js|workbox-[A-Za-z0-9_-]+\.js|pwa-resources-[A-Za-z0-9_-]+\.json|android-release\.json|downloads\/elan-android-v0\.2\.3\.apk)$/);
     assert.ok(Number.isSafeInteger(file.bytes) && file.bytes > 0 && file.bytes <= (file.path === APK_PATH ? 50000000 : 10000000));
     assert.match(file.sha256, /^[a-f0-9]{64}$/);
   }
   assert.equal(digest(canonical({ basePath: meta.basePath, files: meta.files })), meta.buildSha256);
-  assert.equal(meta.androidRelease?.version, '0.2.2');
+  assert.equal(meta.androidRelease?.version, '0.2.3');
   assert.equal(meta.androidRelease?.minAndroid, 7);
   assert.equal(meta.androidRelease?.url, APK_PATH);
   assert.match(expectedBuild ?? '', /^[a-f0-9]{64}$/);
@@ -345,7 +415,7 @@ try {
   await androidLink.click();
   const androidDownload = await androidDownloadWait;
   assert.equal(await androidDownload.failure(), null);
-  assert.equal(androidDownload.suggestedFilename(), 'elan-android-v0.2.2.apk');
+  assert.equal(androidDownload.suggestedFilename(), 'elan-android-v0.2.3.apk');
   const androidDownloadPath = await androidDownload.path(); assert.ok(androidDownloadPath);
   const downloadedApk = await readFile(androidDownloadPath);
   assert.equal(downloadedApk.length, apkFile.bytes); assert.equal(digest(downloadedApk), apkFile.sha256);
@@ -380,7 +450,7 @@ try {
   await expect(page.getByRole('status').filter({ hasText: 'Difficulté enregistrée : niveau 3.' })).toBeVisible();
   await expect(difficulty).toHaveValue('3');
   await expect(difficulty).toBeEnabled();
-  const profiles = [{ ...originalProfiles[0], difficulty: 3 }];
+  let profiles = [{ ...originalProfiles[0], difficulty: 3 }];
   assert.deepEqual(await store('profiles'), profiles);
   assert.deepEqual(await store('attempts'), firstAttempts);
   // The supported-level filter remains independent of the chosen playing level.
@@ -392,6 +462,10 @@ try {
   assert.equal(second.run.profileId, originalProfiles[0].id);
   assert.notEqual(second.run.id, first.run.id);
   assert.ok(second.cardCount > first.cardCount);
+  await page.getByRole('button', { name: 'Quitter', exact: true }).click();
+  await checkDashboard(1, 1);
+  assert.deepEqual(await store('runs'), [second.run]);
+  profiles = await editProfileWithPendingRun(originalProfiles[0], firstAttempts, second.run, second.cardCount);
   const secondAttempt = await finishPairs(second.run, second.cardCount, originalProfiles[0].id);
   await checkDashboard(2, 1);
   proof.modernInterfaceVerified = true; proof.dashboardWidgetsVerified = true; proof.activityJourneyVerified = true;
@@ -404,6 +478,7 @@ try {
   assert.equal(page.url(), baseURL);
   await navigate('Explorer');
   await expect(page.getByRole('combobox', { name: 'Difficulté pour jouer', exact: true })).toHaveValue('3');
+  await expect(page.getByRole('combobox', { name: 'Niveau d’apprentissage', exact: true })).toHaveValue('CP2');
   assert.deepEqual(await store('profiles'), profiles);
   assert.deepEqual(await store('attempts'), attempts);
   await navigate('Mes progrès');
@@ -426,7 +501,9 @@ try {
   const backup = JSON.parse(await readFile(backupPath, 'utf8'));
   assert.deepEqual(backup.profiles, profiles);
   assert.deepEqual(backup.attempts, attempts);
+  assert.deepEqual(backup.runs, []);
   proof.exportVerified = true;
+  proof.editedProfileExportVerified = true;
   await expect(page.getByRole('region', { name: 'Disponibilité hors connexion', exact: true }).getByRole('status'))
     .toContainText('Les fichiers attendus de cette version sont présents dans le cache.', { timeout: 60000 });
   await page.reload();

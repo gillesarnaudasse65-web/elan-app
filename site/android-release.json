@@ -1,8 +1,8 @@
 {
   "name": "Élan Android",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "minAndroid": 7,
-  "bytes": 3867247,
-  "sha256": "2675a6374d3a976f9ee6dd9479cbaac71b7f85ebd7fc2b2ebb27c237aab48cf9",
-  "url": "downloads/elan-android-v0.2.2.apk"
+  "bytes": 3875877,
+  "sha256": "3e74c48840d7e65baf1c4876c40cbbace4d75641146f527b5d72cfca9a6815cd",
+  "url": "downloads/elan-android-v0.2.3.apk"
 }
